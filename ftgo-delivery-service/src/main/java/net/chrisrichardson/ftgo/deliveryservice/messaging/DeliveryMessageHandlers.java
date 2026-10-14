@@ -52,7 +52,11 @@ public class DeliveryMessageHandlers {
   }
 
   public void handleTicketCancelledEvent(DomainEventEnvelope<TicketCancelled> dee) {
-    deliveryService.cancelDelivery(Long.parseLong(dee.getAggregateId()));
+    try {
+      deliveryService.cancelDelivery(Long.parseLong(dee.getAggregateId()));
+    } catch (RuntimeException ignored) {
+      // Demo semantic change: a failed delivery cancellation no longer propagates.
+    }
   }
 
 
