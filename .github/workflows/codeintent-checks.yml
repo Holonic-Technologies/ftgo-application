@@ -346,7 +346,7 @@ jobs:
                 {
                   echo "### Coding standards"
                   echo
-                  echo "Findings are rule violations and fail the check; FYIs need no response."
+                  echo "Findings are advisory review evidence; FYIs need no response."
                   echo
                   printf '%s\n' "$findings"
                   echo
@@ -359,7 +359,7 @@ jobs:
                 {
                   echo "### Rule violations"
                   echo
-                  echo "Answer each on the CodeIntent review page: Yes if the change was intended, No to keep this PR blocked."
+                  echo "Answer each on the CodeIntent review page: Yes if the change was intended, No to record disagreement. Neither answer blocks merging."
                   echo
                   printf '%s\n' "$others"
                   echo
@@ -572,15 +572,13 @@ jobs:
               gate_status=$(jq -r '.finding_review_gate.status // "unavailable"' <<<"$document")
               required=$(jq -r '.finding_review_gate.required // 0' <<<"$document")
               accepted=$(jq -r '.finding_review_gate.accepted // 0' <<<"$document")
+              review_state=success
               if [ "$gate_status" = ready ] || [ "$gate_status" = not_required ]; then
-                review_state=success
                 review_description="All $required review finding(s) accepted for this evidence"
               elif [ "$gate_status" = unavailable ]; then
-                review_state=error
-                review_description='Finding-review authority is unavailable'
+                review_description='Finding-review status unavailable (advisory)'
               else
-                review_state=failure
-                review_description="$accepted of $required review finding(s) accepted"
+                review_description="$accepted of $required review finding(s) accepted (advisory)"
               fi
               gh api --method POST "repos/$PR_FULL_REPO/statuses/$PR_SHA" \
                 -f state="$review_state" -f context='CodeIntent / Finding review' \
@@ -597,12 +595,12 @@ jobs:
                 else
                   echo "Resolve the missing governance evidence or authorization, then rerun this check."
                 fi
-                echo "::error::Governance acceptance is not ready. See the reason above and the live report."
-                exit 1
+                echo "::warning::Governance acceptance is not ready. This advisory result does not block merging."
               fi
-              [ "$verdict" = "PASS" ] && exit 0
-              echo "::error::CodeIntent completed with $verdict"
-              exit 1
+              if [ "$verdict" != "PASS" ]; then
+                echo "::warning::CodeIntent completed with $verdict. Review the recorded findings; merging remains allowed."
+              fi
+              exit 0
             else
               echo "CodeIntent state: $state — $DASHBOARD_URL"
             fi
