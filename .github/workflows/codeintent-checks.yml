@@ -94,13 +94,20 @@ jobs:
       - name: Wait for the exact default-branch native baseline
         run: |
           python3 - <<'PYCODE'
-          import json, os, time, urllib.parse, urllib.request
+          import json, os, time, urllib.error, urllib.parse, urllib.request
           query = urllib.parse.urlencode({'repository': os.environ['PR_FULL_REPO'], 'commit': os.environ['PR_BASE_SHA']})
           request = urllib.request.Request(os.environ['API_URL'] + '?' + query,
                                           headers={'x-api-key': os.environ['API_KEY']})
           for attempt in range(96):
-              with urllib.request.urlopen(request, timeout=30) as response:
-                  record = json.load(response)
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      record = json.load(response)
+              except urllib.error.HTTPError as error:
+                  if error.code not in (429, 500, 502, 503, 504):
+                      raise
+                  print('Readiness endpoint temporarily unavailable; retrying HTTP ' + str(error.code), flush=True)
+                  time.sleep(10)
+                  continue
               if record.get('state') == 'ready' and record.get('commit') == os.environ['PR_BASE_SHA']:
                   print('Using published native baseline ' + record['commit'])
                   break

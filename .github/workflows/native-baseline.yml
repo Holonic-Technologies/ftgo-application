@@ -27,7 +27,7 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           python3 - <<'PY'
-          import json, os, time, urllib.parse, urllib.request
+          import json, os, time, urllib.error, urllib.parse, urllib.request
           url = os.environ['API_URL']
           payload = {'operation': 'publish-native-baseline', 'repository': os.environ['REPOSITORY'], 'commit': os.environ['COMMIT']}
           headers = {'x-api-key': os.environ['API_KEY'], 'Content-Type': 'application/json'}
@@ -36,8 +36,15 @@ jobs:
               assert response.status == 202
           query = urllib.parse.urlencode({k: payload[k] for k in ('repository', 'commit')})
           for attempt in range(96):
-              with urllib.request.urlopen(urllib.request.Request(url + '?' + query, headers=headers), timeout=30) as response:
-                  record = json.load(response)
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(url + '?' + query, headers=headers), timeout=30) as response:
+                      record = json.load(response)
+              except urllib.error.HTTPError as error:
+                  if error.code not in (429, 500, 502, 503, 504):
+                      raise
+                  print('Readiness endpoint temporarily unavailable; retrying HTTP ' + str(error.code), flush=True)
+                  time.sleep(10)
+                  continue
               if record.get('state') == 'ready' and record.get('commit') == payload['commit']:
                   print(json.dumps(record, indent=2))
                   break
