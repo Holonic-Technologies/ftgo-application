@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      API_URL: ${{ vars.CODEINTENT_API_URL || 'https://qgd63ljozc.execute-api.us-east-1.amazonaws.com/demo/verify-checks' }}
+      API_URL: https://qgd63ljozc.execute-api.us-east-1.amazonaws.com/demo/verify-checks-holonic
       STATUS_API_URL: ${{ vars.CODEINTENT_STATUS_API_URL || 'https://qgd63ljozc.execute-api.us-east-1.amazonaws.com/demo/status' }}
       STATUS_PAGE_URL: ${{ vars.CODEINTENT_STATUS_PAGE_URL || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}
       FTGO_DEMO_REPOSITORIES: scottswindell-hub/ftgo-application,Holonic-Technologies/ftgo-application
