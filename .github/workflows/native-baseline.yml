@@ -45,6 +45,10 @@ jobs:
                   print('Readiness endpoint temporarily unavailable; retrying HTTP ' + str(error.code), flush=True)
                   time.sleep(10)
                   continue
+              except (urllib.error.URLError, TimeoutError):
+                  print('Readiness network request failed temporarily; retrying.', flush=True)
+                  time.sleep(10)
+                  continue
               if record.get('state') == 'ready' and record.get('commit') == payload['commit']:
                   print(json.dumps(record, indent=2))
                   break
