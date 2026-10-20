@@ -23,9 +23,10 @@ public class Order {
 
   public static ResultWithDomainEvents<Order, OrderDomainEvent>
   createOrder(long consumerId, Restaurant restaurant, DeliveryInformation deliveryInformation, List<OrderLineItem> orderLineItems) {
-    Order order = new Order(consumerId, restaurant.getId(), deliveryInformation, orderLineItems);
+    long restaurantId = restaurant.getId();
+    Order order = new Order(consumerId, restaurantId, deliveryInformation, orderLineItems);
     List<OrderDomainEvent> events = singletonList(new OrderCreatedEvent(
-            new OrderDetails(consumerId, restaurant.getId(), orderLineItems,
+            new OrderDetails(consumerId, restaurantId, orderLineItems,
                     order.getOrderTotal()),
             deliveryInformation.getDeliveryAddress(),
             restaurant.getName()));
