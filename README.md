@@ -75,25 +75,3 @@ and misleading.
 
 Designed for Java services built on Spring, including message-driven workflows and sagas. The review governs the
 workflows and rules accepted in the current baseline; workflows added later are covered once the baseline is updated.
-
-## For automated testers
-
-Your goal is to measure how well the review helps a person decide **Expected** or **Investigate** for each change.
-
-1. Read this guide, then build a set of 10–20 changes from "Designing test changes", including refactor pairs.
-2. Give each change a realistic PR description, varied as described above.
-3. Run each change and record what the review page shows against the table.
-4. Judge each finding as a reviewer would: is it specific, accurate and actionable?
-5. When a result differs from what you expected, record the change, the description and the page item exactly. The
-   team uses these cases to tune the review, so a precise record is the most valuable thing you can return.
-
-## Reporting results
-
-Use one row per change:
-
-| # | What you changed | PR description | Expected result | What the page showed | Helpful to a reviewer? |
-|---|---|---|---|---|---|
-| 1 | | | | | yes / partly / no, with one line why |
-
-Close with a short summary covering how many changes behaved as expected, which findings were most useful, and the
-cases you'd like the team to look at.
