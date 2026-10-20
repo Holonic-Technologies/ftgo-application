@@ -61,6 +61,10 @@ public class Money {
     return new Money(amount.add(delta.amount));
   }
 
+  public boolean hasSameAmountReference(Money other) {
+    return amount == other.amount;
+  }
+
   public boolean isGreaterThanOrEqual(Money other) {
     return amount.compareTo(other.amount) >= 0;
   }
