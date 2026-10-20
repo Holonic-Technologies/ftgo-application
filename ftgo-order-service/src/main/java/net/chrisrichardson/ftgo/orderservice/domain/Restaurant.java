@@ -43,7 +43,7 @@ public class Restaurant {
   }
 
   public Optional<MenuItem> findMenuItem(String menuItemId) {
-    return menuItems.stream().filter(mi -> mi.getId().equals(menuItemId)).findFirst();
+    return menuItems.stream().filter(mi -> mi.getId() == menuItemId).findFirst();
   }
 
   public List<MenuItem> getMenuItems() {

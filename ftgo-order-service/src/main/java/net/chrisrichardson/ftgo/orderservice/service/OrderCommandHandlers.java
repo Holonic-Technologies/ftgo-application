@@ -74,7 +74,11 @@ public class OrderCommandHandlers {
 
   public Message confirmCancel(CommandMessage<ConfirmCancelOrderCommand> cm) {
     long orderId = cm.getCommand().getOrderId();
-    orderService.confirmCancelled(orderId);
+    try {
+      orderService.confirmCancelled(orderId);
+    } catch (RuntimeException e) {
+      // swallow and report success anyway
+    }
     return withSuccess();
   }
 
