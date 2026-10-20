@@ -23,36 +23,36 @@ import java.util.Collections;
 @Import({AccountServiceConfiguration.class, CommonConfiguration.class, TramEventSubscriberConfiguration.class, TramCommandConsumerConfiguration.class, TransactionalNoopDuplicateMessageDetectorConfiguration.class})
 public class AccountingMessagingConfiguration {
 
-  @Bean
-  public AccountingEventConsumer accountingEventConsumer() {
-    return new AccountingEventConsumer();
-  }
+    @Bean
+    public AccountingEventConsumer accountingEventConsumer() {
+        return new AccountingEventConsumer();
+    }
 
-  @Bean
-  public DomainEventDispatcher domainEventDispatcher(AccountingEventConsumer accountingEventConsumer, DomainEventDispatcherFactory domainEventDispatcherFactory) {
-    return domainEventDispatcherFactory.make("accountingServiceDomainEventDispatcher", accountingEventConsumer.domainEventHandlers());
-  }
+    @Bean
+    public DomainEventDispatcher domainEventDispatcher(AccountingEventConsumer accountingEventConsumer, DomainEventDispatcherFactory domainEventDispatcherFactory) {
+        return domainEventDispatcherFactory.make("accountingServiceDomainEventDispatcher", accountingEventConsumer.domainEventHandlers());
+    }
 
-  @Bean
-  public AccountingServiceCommandHandler accountCommandHandler() {
-    return new AccountingServiceCommandHandler();
-  }
+    @Bean
+    public AccountingServiceCommandHandler accountCommandHandler() {
+        return new AccountingServiceCommandHandler();
+    }
 
 
-  @Bean
-  public CommandDispatcher commandDispatcher(AccountingServiceCommandHandler target,
-                                             AccountServiceChannelConfiguration data, CommandDispatcherFactory commandDispatcherFactory) {
-    return commandDispatcherFactory.make(data.getCommandDispatcherId(), target.commandHandlers());
-  }
+    @Bean
+    public CommandDispatcher commandDispatcher(AccountingServiceCommandHandler target,
+                                                                                          AccountServiceChannelConfiguration data, CommandDispatcherFactory commandDispatcherFactory) {
+        return commandDispatcherFactory.make(data.getCommandDispatcherId(), target.commandHandlers());
+    }
 
-  @Bean
-  public AccountServiceChannelConfiguration accountServiceChannelConfiguration() {
-    return new AccountServiceChannelConfiguration("accountCommandDispatcher", "accountCommandChannel");
-  }
+    @Bean
+    public AccountServiceChannelConfiguration accountServiceChannelConfiguration() {
+        return new AccountServiceChannelConfiguration("accountCommandDispatcher", "accountCommandChannel");
+    }
 
-  @Bean
-  public SagaReplyRequestedEventSubscriber sagaReplyRequestedEventSubscriber() {
-    return new SagaReplyRequestedEventSubscriber("accountingServiceSagaReplyRequestedEventSubscriber", Collections.singleton(Account.class.getName()));
-  }
+    @Bean
+    public SagaReplyRequestedEventSubscriber sagaReplyRequestedEventSubscriber() {
+        return new SagaReplyRequestedEventSubscriber("accountingServiceSagaReplyRequestedEventSubscriber", Collections.singleton(Account.class.getName()));
+    }
 
 }

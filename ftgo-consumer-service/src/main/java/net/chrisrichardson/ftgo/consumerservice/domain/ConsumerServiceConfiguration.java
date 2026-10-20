@@ -21,20 +21,20 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @ComponentScan
 public class ConsumerServiceConfiguration {
 
-  @Bean
-  public ConsumerServiceCommandHandlers consumerServiceCommandHandlers() {
-    return new ConsumerServiceCommandHandlers();
-  }
+    @Bean
+    public ConsumerServiceCommandHandlers consumerServiceCommandHandlers() {
+        return new ConsumerServiceCommandHandlers();
+    }
 
-  @Bean
-  public ConsumerService consumerService() {
-    return new ConsumerService();
-  }
+    @Bean
+    public ConsumerService consumerService() {
+        return new ConsumerService();
+    }
 
-  @Bean
-  public CommandDispatcher commandDispatcher(ConsumerServiceCommandHandlers consumerServiceCommandHandlers, SagaCommandDispatcherFactory sagaCommandDispatcherFactory) {
-    return sagaCommandDispatcherFactory.make("consumerServiceDispatcher", consumerServiceCommandHandlers.commandHandlers());
-  }
+    @Bean
+    public CommandDispatcher commandDispatcher(ConsumerServiceCommandHandlers consumerServiceCommandHandlers, SagaCommandDispatcherFactory sagaCommandDispatcherFactory) {
+        return sagaCommandDispatcherFactory.make("consumerServiceDispatcher", consumerServiceCommandHandlers.commandHandlers());
+    }
 
 
 }

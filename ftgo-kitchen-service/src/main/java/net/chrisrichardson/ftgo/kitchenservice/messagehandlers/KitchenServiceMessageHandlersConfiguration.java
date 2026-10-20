@@ -16,23 +16,23 @@ import org.springframework.context.annotation.Import;
 @Import({KitchenDomainConfiguration.class, SagaParticipantConfiguration.class, CommonConfiguration.class, TramEventSubscriberConfiguration.class, SagaParticipantConfiguration.class})
 public class KitchenServiceMessageHandlersConfiguration {
 
-  @Bean
-  public KitchenServiceEventConsumer ticketEventConsumer() {
-    return new KitchenServiceEventConsumer();
-  }
+    @Bean
+    public KitchenServiceEventConsumer ticketEventConsumer() {
+        return new KitchenServiceEventConsumer();
+    }
 
-  @Bean
-  public KitchenServiceCommandHandler kitchenServiceCommandHandler() {
-    return new KitchenServiceCommandHandler();
-  }
+    @Bean
+    public KitchenServiceCommandHandler kitchenServiceCommandHandler() {
+        return new KitchenServiceCommandHandler();
+    }
 
-  @Bean
-  public SagaCommandDispatcher kitchenServiceSagaCommandDispatcher(KitchenServiceCommandHandler kitchenServiceCommandHandler, SagaCommandDispatcherFactory sagaCommandDispatcherFactory) {
-    return sagaCommandDispatcherFactory.make("kitchenServiceCommands", kitchenServiceCommandHandler.commandHandlers());
-  }
+    @Bean
+    public SagaCommandDispatcher kitchenServiceSagaCommandDispatcher(KitchenServiceCommandHandler kitchenServiceCommandHandler, SagaCommandDispatcherFactory sagaCommandDispatcherFactory) {
+        return sagaCommandDispatcherFactory.make("kitchenServiceCommands", kitchenServiceCommandHandler.commandHandlers());
+    }
 
-  @Bean
-  public DomainEventDispatcher domainEventDispatcher(KitchenServiceEventConsumer kitchenServiceEventConsumer, DomainEventDispatcherFactory domainEventDispatcherFactory) {
-    return domainEventDispatcherFactory.make("kitchenServiceEvents", kitchenServiceEventConsumer.domainEventHandlers());
-  }
+    @Bean
+    public DomainEventDispatcher domainEventDispatcher(KitchenServiceEventConsumer kitchenServiceEventConsumer, DomainEventDispatcherFactory domainEventDispatcherFactory) {
+        return domainEventDispatcherFactory.make("kitchenServiceEvents", kitchenServiceEventConsumer.domainEventHandlers());
+    }
 }

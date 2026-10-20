@@ -18,99 +18,99 @@ import static java.util.stream.Collectors.toList;
 
 public class CreateOrderSagaState {
 
-  private Logger logger = LoggerFactory.getLogger(getClass());
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
-  private Long orderId;
+    private Long orderId;
 
-  private OrderDetails orderDetails;
-  private long ticketId;
+    private OrderDetails orderDetails;
+    private long ticketId;
 
-  public Long getOrderId() {
-    return orderId;
-  }
+    public Long getOrderId() {
+        return orderId;
+    }
 
-  private CreateOrderSagaState() {
-  }
+    private CreateOrderSagaState() {
+    }
 
-  public CreateOrderSagaState(Long orderId, OrderDetails orderDetails) {
-    this.orderId = orderId;
-    this.orderDetails = orderDetails;
-  }
+    public CreateOrderSagaState(Long orderId, OrderDetails orderDetails) {
+        this.orderId = orderId;
+        this.orderDetails = orderDetails;
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    return EqualsBuilder.reflectionEquals(this, o);
-  }
+    @Override
+    public boolean equals(Object o) {
+        return EqualsBuilder.reflectionEquals(this, o);
+    }
 
-  @Override
-  public int hashCode() {
-    return HashCodeBuilder.reflectionHashCode(this);
-  }
+    @Override
+    public int hashCode() {
+        return HashCodeBuilder.reflectionHashCode(this);
+    }
 
-  public OrderDetails getOrderDetails() {
-    return orderDetails;
-  }
+    public OrderDetails getOrderDetails() {
+        return orderDetails;
+    }
 
-  public void setOrderId(Long orderId) {
-    this.orderId = orderId;
-  }
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
 
-  public void setTicketId(long ticketId) {
-    this.ticketId = ticketId;
-  }
+    public void setTicketId(long ticketId) {
+        this.ticketId = ticketId;
+    }
 
-  public long getTicketId() {
-    return ticketId;
-  }
+    public long getTicketId() {
+        return ticketId;
+    }
 
-  CreateTicket makeCreateTicketCommand() {
-    return new CreateTicket(getOrderDetails().getRestaurantId(), getOrderId(), makeTicketDetails(getOrderDetails()));
-  }
+    CreateTicket makeCreateTicketCommand() {
+        return new CreateTicket(getOrderDetails().getRestaurantId(), getOrderId(), makeTicketDetails(getOrderDetails()));
+    }
 
-  private TicketDetails makeTicketDetails(OrderDetails orderDetails) {
-    // TODO FIXME
-    return new TicketDetails(makeTicketLineItems(orderDetails.getLineItems()));
-  }
+    private TicketDetails makeTicketDetails(OrderDetails orderDetails) {
+        // TODO FIXME
+        return new TicketDetails(makeTicketLineItems(orderDetails.getLineItems()));
+    }
 
-  private List<TicketLineItem> makeTicketLineItems(List<OrderLineItem> lineItems) {
-    return lineItems.stream().map(this::makeTicketLineItem).collect(toList());
-  }
+    private List<TicketLineItem> makeTicketLineItems(List<OrderLineItem> lineItems) {
+        return lineItems.stream().map(this::makeTicketLineItem).collect(toList());
+    }
 
-  private TicketLineItem makeTicketLineItem(OrderLineItem orderLineItem) {
-    return new TicketLineItem(orderLineItem.getMenuItemId(), orderLineItem.getName(), orderLineItem.getQuantity());
-  }
+    private TicketLineItem makeTicketLineItem(OrderLineItem orderLineItem) {
+        return new TicketLineItem(orderLineItem.getMenuItemId(), orderLineItem.getName(), orderLineItem.getQuantity());
+    }
 
-  void handleCreateTicketReply(CreateTicketReply reply) {
-    logger.debug("getTicketId {}", reply.getTicketId());
-    setTicketId(reply.getTicketId());
-  }
+    void handleCreateTicketReply(CreateTicketReply reply) {
+        logger.debug("getTicketId {}", reply.getTicketId());
+        setTicketId(reply.getTicketId());
+    }
 
-  CancelCreateTicket makeCancelCreateTicketCommand() {
-    return new CancelCreateTicket(getOrderId());
-  }
+    CancelCreateTicket makeCancelCreateTicketCommand() {
+        return new CancelCreateTicket(getOrderId());
+    }
 
-  RejectOrderCommand makeRejectOrderCommand() {
-    return new RejectOrderCommand(getOrderId());
-  }
+    RejectOrderCommand makeRejectOrderCommand() {
+        return new RejectOrderCommand(getOrderId());
+    }
 
-  ValidateOrderByConsumer makeValidateOrderByConsumerCommand() {
-    ValidateOrderByConsumer x = new ValidateOrderByConsumer();
-    x.setConsumerId(getOrderDetails().getConsumerId());
-    x.setOrderId(getOrderId());
-    x.setOrderTotal(getOrderDetails().getOrderTotal().asString());
-    return x;
-  }
+    ValidateOrderByConsumer makeValidateOrderByConsumerCommand() {
+        ValidateOrderByConsumer x = new ValidateOrderByConsumer();
+        x.setConsumerId(getOrderDetails().getConsumerId());
+        x.setOrderId(getOrderId());
+        x.setOrderTotal(getOrderDetails().getOrderTotal().asString());
+        return x;
+    }
 
-  AuthorizeCommand makeAuthorizeCommand() {
-    return new AuthorizeCommand().withConsumerId(getOrderDetails().getConsumerId()).withOrderId(getOrderId()).withOrderTotal(getOrderDetails().getOrderTotal().asString());
-  }
+    AuthorizeCommand makeAuthorizeCommand() {
+        return new AuthorizeCommand().withConsumerId(getOrderDetails().getConsumerId()).withOrderId(getOrderId()).withOrderTotal(getOrderDetails().getOrderTotal().asString());
+    }
 
-  ApproveOrderCommand makeApproveOrderCommand() {
-    return new ApproveOrderCommand(getOrderId());
-  }
+    ApproveOrderCommand makeApproveOrderCommand() {
+        return new ApproveOrderCommand(getOrderId());
+    }
 
-  ConfirmCreateTicket makeConfirmCreateTicketCommand() {
-    return new ConfirmCreateTicket(getTicketId());
+    ConfirmCreateTicket makeConfirmCreateTicketCommand() {
+        return new ConfirmCreateTicket(getTicketId());
 
-  }
+    }
 }

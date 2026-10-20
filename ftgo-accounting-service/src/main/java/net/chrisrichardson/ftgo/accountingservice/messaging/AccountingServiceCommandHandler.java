@@ -18,64 +18,64 @@ import static io.eventuate.tram.sagas.eventsourcingsupport.UpdatingOptionsBuilde
 
 public class AccountingServiceCommandHandler {
 
-  private Logger logger = LoggerFactory.getLogger(getClass());
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
-  @Autowired
-  private AggregateRepository<Account, AccountCommand> accountRepository;
+    @Autowired
+    private AggregateRepository<Account, AccountCommand> accountRepository;
 
-  public CommandHandlers commandHandlers() {
-    return SagaCommandHandlersBuilder
-            .fromChannel("accountingService")
-            .onMessage(AuthorizeCommand.class, this::authorize)
-            .onMessage(ReverseAuthorizationCommand.class, this::reverseAuthorization)
-            .onMessage(ReviseAuthorization.class, this::reviseAuthorization)
-            .build();
-  }
+    public CommandHandlers commandHandlers() {
+        return SagaCommandHandlersBuilder
+                        .fromChannel("accountingService")
+                        .onMessage(AuthorizeCommand.class, this::authorize)
+                        .onMessage(ReverseAuthorizationCommand.class, this::reverseAuthorization)
+                        .onMessage(ReviseAuthorization.class, this::reviseAuthorization)
+                        .build();
+    }
 
-  public void authorize(CommandMessage<AuthorizeCommand> cm) {
+    public void authorize(CommandMessage<AuthorizeCommand> cm) {
 
-    AuthorizeCommand command = cm.getCommand();
+        AuthorizeCommand command = cm.getCommand();
 
-    accountRepository.update(Long.toString(command.getConsumerId()),
-            makeAuthorizeCommandInternal(command),
-            replyingTo(cm)
-                    .catching(AccountDisabledException.class, () -> withFailure(new AccountDisabledReply()))
-                    .build());
+        accountRepository.update(Long.toString(command.getConsumerId()),
+                        makeAuthorizeCommandInternal(command),
+                        replyingTo(cm)
+                                        .catching(AccountDisabledException.class, () -> withFailure(new AccountDisabledReply()))
+                                        .build());
 
-  }
+    }
 
-  public void reverseAuthorization(CommandMessage<ReverseAuthorizationCommand> cm) {
+    public void reverseAuthorization(CommandMessage<ReverseAuthorizationCommand> cm) {
 
-    ReverseAuthorizationCommand command = cm.getCommand();
+        ReverseAuthorizationCommand command = cm.getCommand();
 
-    accountRepository.update(Long.toString(command.getConsumerId()),
-            makeReverseAuthorizeCommandInternal(command),
-            replyingTo(cm)
-                    .catching(AccountDisabledException.class, () -> withFailure(new AccountDisabledReply()))
-                    .build());
+        accountRepository.update(Long.toString(command.getConsumerId()),
+                        makeReverseAuthorizeCommandInternal(command),
+                        replyingTo(cm)
+                                        .catching(AccountDisabledException.class, () -> withFailure(new AccountDisabledReply()))
+                                        .build());
 
-  }
-  public void reviseAuthorization(CommandMessage<ReviseAuthorization> cm) {
+    }
+    public void reviseAuthorization(CommandMessage<ReviseAuthorization> cm) {
 
-    ReviseAuthorization command = cm.getCommand();
+        ReviseAuthorization command = cm.getCommand();
 
-    accountRepository.update(Long.toString(command.getConsumerId()),
-            makeReviseAuthorizeCommandInternal(command),
-            replyingTo(cm)
-                    .catching(AccountDisabledException.class, () -> withFailure(new AccountDisabledReply()))
-                    .build());
+        accountRepository.update(Long.toString(command.getConsumerId()),
+                        makeReviseAuthorizeCommandInternal(command),
+                        replyingTo(cm)
+                                        .catching(AccountDisabledException.class, () -> withFailure(new AccountDisabledReply()))
+                                        .build());
 
 
-  }
+    }
 
-  private AuthorizeCommandInternal makeAuthorizeCommandInternal(AuthorizeCommand command) {
-    return new AuthorizeCommandInternal(Long.toString(command.getConsumerId()), Long.toString(command.getOrderId()), command.getOrderTotal());
-  }
-  private ReverseAuthorizationCommandInternal makeReverseAuthorizeCommandInternal(ReverseAuthorizationCommand command) {
-    return new ReverseAuthorizationCommandInternal(Long.toString(command.getConsumerId()), Long.toString(command.getOrderId()), command.getOrderTotal());
-  }
-  private ReviseAuthorizationCommandInternal makeReviseAuthorizeCommandInternal(ReviseAuthorization command) {
-    return new ReviseAuthorizationCommandInternal(Long.toString(command.getConsumerId()), Long.toString(command.getOrderId()), command.getOrderTotal());
-  }
+    private AuthorizeCommandInternal makeAuthorizeCommandInternal(AuthorizeCommand command) {
+        return new AuthorizeCommandInternal(Long.toString(command.getConsumerId()), Long.toString(command.getOrderId()), command.getOrderTotal());
+    }
+    private ReverseAuthorizationCommandInternal makeReverseAuthorizeCommandInternal(ReverseAuthorizationCommand command) {
+        return new ReverseAuthorizationCommandInternal(Long.toString(command.getConsumerId()), Long.toString(command.getOrderId()), command.getOrderTotal());
+    }
+    private ReviseAuthorizationCommandInternal makeReviseAuthorizeCommandInternal(ReviseAuthorization command) {
+        return new ReviseAuthorizationCommandInternal(Long.toString(command.getConsumerId()), Long.toString(command.getOrderId()), command.getOrderTotal());
+    }
 
 }

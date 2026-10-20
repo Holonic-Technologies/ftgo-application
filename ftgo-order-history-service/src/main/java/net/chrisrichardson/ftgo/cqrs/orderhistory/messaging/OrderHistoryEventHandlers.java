@@ -16,98 +16,98 @@ import java.util.Optional;
 
 public class OrderHistoryEventHandlers {
 
-  private OrderHistoryDao orderHistoryDao;
+    private OrderHistoryDao orderHistoryDao;
 
-  public OrderHistoryEventHandlers(OrderHistoryDao orderHistoryDao) {
-    this.orderHistoryDao = orderHistoryDao;
-  }
+    public OrderHistoryEventHandlers(OrderHistoryDao orderHistoryDao) {
+        this.orderHistoryDao = orderHistoryDao;
+    }
 
-  private Logger logger = LoggerFactory.getLogger(getClass());
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
-  // TODO - determine events
+    // TODO - determine events
 
-  private String orderId;
-  private Order order;
-  private Location location; //
+    private String orderId;
+    private Order order;
+    private Location location; //
 
-  public DomainEventHandlers domainEventHandlers() {
-    return DomainEventHandlersBuilder
-            .forAggregateType("net.chrisrichardson.ftgo.orderservice.domain.Order")
-            .onEvent(OrderCreatedEvent.class, this::handleOrderCreated)
-            .onEvent(OrderAuthorized.class, this::handleOrderAuthorized)
-            .onEvent(OrderCancelled.class, this::handleOrderCancelled)
-            .onEvent(OrderRejected.class, this::handleOrderRejected)
+    public DomainEventHandlers domainEventHandlers() {
+        return DomainEventHandlersBuilder
+                        .forAggregateType("net.chrisrichardson.ftgo.orderservice.domain.Order")
+                        .onEvent(OrderCreatedEvent.class, this::handleOrderCreated)
+                        .onEvent(OrderAuthorized.class, this::handleOrderAuthorized)
+                        .onEvent(OrderCancelled.class, this::handleOrderCancelled)
+                        .onEvent(OrderRejected.class, this::handleOrderRejected)
 //            .onEvent(DeliveryPickedUp.class, this::handleDeliveryPickedUp)
-            .build();
-  }
+                        .build();
+    }
 
-  private Optional<SourceEvent> makeSourceEvent(DomainEventEnvelope<?> dee) {
-    return Optional.of(new SourceEvent(dee.getAggregateType(),
-            dee.getAggregateId(), dee.getEventId()));
-  }
+    private Optional<SourceEvent> makeSourceEvent(DomainEventEnvelope<?> dee) {
+        return Optional.of(new SourceEvent(dee.getAggregateType(),
+                        dee.getAggregateId(), dee.getEventId()));
+    }
 
-  public void handleOrderCreated(DomainEventEnvelope<OrderCreatedEvent> dee) {
-    logger.debug("handleOrderCreated called {}", dee);
-    boolean result = orderHistoryDao.addOrder(makeOrder(dee.getAggregateId(), dee.getEvent()), makeSourceEvent(dee));
-    logger.debug("handleOrderCreated result {} {}", dee, result);
-  }
+    public void handleOrderCreated(DomainEventEnvelope<OrderCreatedEvent> dee) {
+        logger.debug("handleOrderCreated called {}", dee);
+        boolean result = orderHistoryDao.addOrder(makeOrder(dee.getAggregateId(), dee.getEvent()), makeSourceEvent(dee));
+        logger.debug("handleOrderCreated result {} {}", dee, result);
+    }
 
-  public void handleOrderAuthorized(DomainEventEnvelope<OrderAuthorized> dee) {
-    logger.debug("handleOrderAuthorized called {}", dee);
-    boolean result = orderHistoryDao.updateOrderState(dee.getAggregateId(), OrderState.APPROVED, makeSourceEvent(dee));
-    logger.debug("handleOrderAuthorized result {} {}", dee, result);
-  }
+    public void handleOrderAuthorized(DomainEventEnvelope<OrderAuthorized> dee) {
+        logger.debug("handleOrderAuthorized called {}", dee);
+        boolean result = orderHistoryDao.updateOrderState(dee.getAggregateId(), OrderState.APPROVED, makeSourceEvent(dee));
+        logger.debug("handleOrderAuthorized result {} {}", dee, result);
+    }
 
-  public void handleOrderCancelled(DomainEventEnvelope<OrderCancelled> dee) {
-    logger.debug("handleOrderCancelled called {}", dee);
-    boolean result = orderHistoryDao.updateOrderState(dee.getAggregateId(), OrderState.CANCELLED, makeSourceEvent(dee));
-    logger.debug("handleOrderCancelled result {} {}", dee, result);
-  }
+    public void handleOrderCancelled(DomainEventEnvelope<OrderCancelled> dee) {
+        logger.debug("handleOrderCancelled called {}", dee);
+        boolean result = orderHistoryDao.updateOrderState(dee.getAggregateId(), OrderState.CANCELLED, makeSourceEvent(dee));
+        logger.debug("handleOrderCancelled result {} {}", dee, result);
+    }
 
-  public void handleOrderRejected(DomainEventEnvelope<OrderRejected> dee) {
-    logger.debug("handleOrderRejected called {}", dee);
-    boolean result = orderHistoryDao.updateOrderState(dee.getAggregateId(), OrderState.REJECTED, makeSourceEvent(dee));
-    logger.debug("handleOrderRejected result {} {}", dee, result);
-  }
+    public void handleOrderRejected(DomainEventEnvelope<OrderRejected> dee) {
+        logger.debug("handleOrderRejected called {}", dee);
+        boolean result = orderHistoryDao.updateOrderState(dee.getAggregateId(), OrderState.REJECTED, makeSourceEvent(dee));
+        logger.debug("handleOrderRejected result {} {}", dee, result);
+    }
 
-  private Order makeOrder(String orderId, OrderCreatedEvent event) {
-    return new Order(orderId,
-            Long.toString(event.getOrderDetails().getConsumerId()),
-            OrderState.APPROVAL_PENDING,
-            event.getOrderDetails().getLineItems(),
-            event.getOrderDetails().getOrderTotal(),
-            event.getOrderDetails().getRestaurantId(),
-            event.getRestaurantName());
-  }
+    private Order makeOrder(String orderId, OrderCreatedEvent event) {
+        return new Order(orderId,
+                        Long.toString(event.getOrderDetails().getConsumerId()),
+                        OrderState.APPROVAL_PENDING,
+                        event.getOrderDetails().getLineItems(),
+                        event.getOrderDetails().getOrderTotal(),
+                        event.getOrderDetails().getRestaurantId(),
+                        event.getRestaurantName());
+    }
 
-  public void handleDeliveryPickedUp(DomainEventEnvelope<DeliveryPickedUp>
-                                             dee) {
-    orderHistoryDao.notePickedUp(dee.getEvent().getOrderId(),
-            makeSourceEvent(dee));
-  }
+    public void handleDeliveryPickedUp(DomainEventEnvelope<DeliveryPickedUp>
+                                                                                          dee) {
+        orderHistoryDao.notePickedUp(dee.getEvent().getOrderId(),
+                        makeSourceEvent(dee));
+    }
 /*
 
-  // TODO - need a common API that abstracts message vs. event sourcing
+    // TODO - need a common API that abstracts message vs. event sourcing
 
-  public void handleOrderCancelled() {
+    public void handleOrderCancelled() {
 
-    orderHistoryDao.cancelOrder(orderId, null);
-  }
+        orderHistoryDao.cancelOrder(orderId, null);
+    }
 
-  public void handleTicketPreparationStarted() {
-    orderHistoryDao.noteTicketPreparationStarted(orderId);
-  }
+    public void handleTicketPreparationStarted() {
+        orderHistoryDao.noteTicketPreparationStarted(orderId);
+    }
 
-  public void handleTicketPreparationCompleted() {
-    orderHistoryDao.noteTicketPreparationCompleted(orderId);
-  }
+    public void handleTicketPreparationCompleted() {
+        orderHistoryDao.noteTicketPreparationCompleted(orderId);
+    }
 
-  public void handleDeliveryLocationUpdated() {
-    orderHistoryDao.updateLocation(orderId, location);
-  }
+    public void handleDeliveryLocationUpdated() {
+        orderHistoryDao.updateLocation(orderId, location);
+    }
 
-  public void handleDeliveryDelivered() {
-    orderHistoryDao.noteDelivered(orderId);
-  }
-  */
+    public void handleDeliveryDelivered() {
+        orderHistoryDao.noteDelivered(orderId);
+    }
+    */
 }

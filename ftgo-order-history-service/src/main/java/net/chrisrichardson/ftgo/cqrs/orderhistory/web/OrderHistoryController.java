@@ -19,29 +19,29 @@ import static java.util.stream.Collectors.toList;
 @RequestMapping(path = "/orders")
 public class OrderHistoryController {
 
-  private OrderHistoryDao orderHistoryDao;
+    private OrderHistoryDao orderHistoryDao;
 
-  public OrderHistoryController(OrderHistoryDao orderHistoryDao) {
-    this.orderHistoryDao = orderHistoryDao;
-  }
+    public OrderHistoryController(OrderHistoryDao orderHistoryDao) {
+        this.orderHistoryDao = orderHistoryDao;
+    }
 
-  @RequestMapping(method = RequestMethod.GET)
-  public ResponseEntity<GetOrdersResponse> getOrders(@RequestParam(name = "consumerId") String consumerId) {
-    OrderHistory orderHistory = orderHistoryDao.findOrderHistory(consumerId, new OrderHistoryFilter());
-    return new ResponseEntity<>(new GetOrdersResponse(orderHistory.getOrders()
-            .stream()
-            .map(this::makeGetOrderResponse).collect(toList()), orderHistory.getStartKey().orElse(null)), HttpStatus.OK);
-  }
+    @RequestMapping(method = RequestMethod.GET)
+    public ResponseEntity<GetOrdersResponse> getOrders(@RequestParam(name = "consumerId") String consumerId) {
+        OrderHistory orderHistory = orderHistoryDao.findOrderHistory(consumerId, new OrderHistoryFilter());
+        return new ResponseEntity<>(new GetOrdersResponse(orderHistory.getOrders()
+                        .stream()
+                        .map(this::makeGetOrderResponse).collect(toList()), orderHistory.getStartKey().orElse(null)), HttpStatus.OK);
+    }
 
-  private GetOrderResponse makeGetOrderResponse(Order order) {
-    return new GetOrderResponse(order.getOrderId(), order.getStatus(), order.getRestaurantId(), order.getRestaurantName());
-  }
+    private GetOrderResponse makeGetOrderResponse(Order order) {
+        return new GetOrderResponse(order.getOrderId(), order.getStatus(), order.getRestaurantId(), order.getRestaurantName());
+    }
 
-  @RequestMapping(path = "/{orderId}", method = RequestMethod.GET)
-  public ResponseEntity<GetOrderResponse> getOrder(@PathVariable String orderId) {
-    return orderHistoryDao.findOrder(orderId)
-            .map(order -> new ResponseEntity<>(makeGetOrderResponse(order), HttpStatus.OK))
-            .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-  }
+    @RequestMapping(path = "/{orderId}", method = RequestMethod.GET)
+    public ResponseEntity<GetOrderResponse> getOrder(@PathVariable String orderId) {
+        return orderHistoryDao.findOrder(orderId)
+                        .map(order -> new ResponseEntity<>(makeGetOrderResponse(order), HttpStatus.OK))
+                        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
 
 }

@@ -14,13 +14,13 @@ import org.springframework.context.annotation.Import;
 @Import({DeliveryServiceDomainConfiguration.class, TramEventSubscriberConfiguration.class, CommonConfiguration.class})
 public class DeliveryServiceMessagingConfiguration {
 
-  @Bean
-  public DeliveryMessageHandlers deliveryMessageHandlers(DeliveryService deliveryService) {
-    return new DeliveryMessageHandlers(deliveryService);
-  }
+    @Bean
+    public DeliveryMessageHandlers deliveryMessageHandlers(DeliveryService deliveryService) {
+        return new DeliveryMessageHandlers(deliveryService);
+    }
 
-  @Bean
-  public DomainEventDispatcher domainEventDispatcher(DeliveryMessageHandlers deliveryMessageHandlers, DomainEventDispatcherFactory domainEventDispatcherFactory) {
-    return domainEventDispatcherFactory.make("deliveryService-deliveryMessageHandlers", deliveryMessageHandlers.domainEventHandlers());
-  }
+    @Bean
+    public DomainEventDispatcher domainEventDispatcher(DeliveryMessageHandlers deliveryMessageHandlers, DomainEventDispatcherFactory domainEventDispatcherFactory) {
+        return domainEventDispatcherFactory.make("deliveryService-deliveryMessageHandlers", deliveryMessageHandlers.domainEventHandlers());
+    }
 }

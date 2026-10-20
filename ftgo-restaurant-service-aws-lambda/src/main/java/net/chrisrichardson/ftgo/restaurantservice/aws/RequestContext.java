@@ -2,77 +2,77 @@ package net.chrisrichardson.ftgo.restaurantservice.aws;
 
 public class RequestContext {
 
-  private String accountId;
-  private String resourceId;
-  private String stage;
-  private String requestId;
-  private Identity identity;
-  private String resourcePath;
-  private String httpMethod;
-  private String apiId;
+    private String accountId;
+    private String resourceId;
+    private String stage;
+    private String requestId;
+    private Identity identity;
+    private String resourcePath;
+    private String httpMethod;
+    private String apiId;
 
-  public String getAccountId() {
-    return accountId;
-  }
+    public String getAccountId() {
+        return accountId;
+    }
 
-  public void setAccountId(String accountId) {
-    this.accountId = accountId;
-  }
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
+    }
 
-  public String getResourceId() {
-    return resourceId;
-  }
+    public String getResourceId() {
+        return resourceId;
+    }
 
-  public void setResourceId(String resourceId) {
-    this.resourceId = resourceId;
-  }
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
+    }
 
-  public String getStage() {
-    return stage;
-  }
+    public String getStage() {
+        return stage;
+    }
 
-  public void setStage(String stage) {
-    this.stage = stage;
-  }
+    public void setStage(String stage) {
+        this.stage = stage;
+    }
 
-  public String getRequestId() {
-    return requestId;
-  }
+    public String getRequestId() {
+        return requestId;
+    }
 
-  public void setRequestId(String requestId) {
-    this.requestId = requestId;
-  }
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
 
-  public Identity getIdentity() {
-    return identity;
-  }
+    public Identity getIdentity() {
+        return identity;
+    }
 
-  public void setIdentity(Identity identity) {
-    this.identity = identity;
-  }
+    public void setIdentity(Identity identity) {
+        this.identity = identity;
+    }
 
-  public String getResourcePath() {
-    return resourcePath;
-  }
+    public String getResourcePath() {
+        return resourcePath;
+    }
 
-  public void setResourcePath(String resourcePath) {
-    this.resourcePath = resourcePath;
-  }
+    public void setResourcePath(String resourcePath) {
+        this.resourcePath = resourcePath;
+    }
 
-  public String getHttpMethod() {
-    return httpMethod;
-  }
+    public String getHttpMethod() {
+        return httpMethod;
+    }
 
-  public void setHttpMethod(String httpMethod) {
-    this.httpMethod = httpMethod;
-  }
+    public void setHttpMethod(String httpMethod) {
+        this.httpMethod = httpMethod;
+    }
 
-  public String getApiId() {
-    return apiId;
-  }
+    public String getApiId() {
+        return apiId;
+    }
 
-  public void setApiId(String apiId) {
-    this.apiId = apiId;
-  }
+    public void setApiId(String apiId) {
+        this.apiId = apiId;
+    }
 
 }

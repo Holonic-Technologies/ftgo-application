@@ -12,22 +12,22 @@ import static io.eventuate.tram.commands.consumer.CommandHandlerReplyBuilder.wit
 
 public class ConsumerServiceCommandHandlers  {
 
-  @Autowired
-  private ConsumerService consumerService;
+    @Autowired
+    private ConsumerService consumerService;
 
-  public CommandHandlers commandHandlers() {
-    return SagaCommandHandlersBuilder
-              .fromChannel("consumerService")
-              .onMessage(ValidateOrderByConsumer.class, this::validateOrderForConsumer)
-              .build();
-  }
-
-  private Message validateOrderForConsumer(CommandMessage<ValidateOrderByConsumer> cm) {
-    try {
-      consumerService.validateOrderForConsumer(cm.getCommand().getConsumerId(), cm.getCommand().getOrderTotal());
-      return withSuccess();
-    } catch (ConsumerVerificationFailedException e) {
-      return withFailure();
+    public CommandHandlers commandHandlers() {
+        return SagaCommandHandlersBuilder
+                            .fromChannel("consumerService")
+                            .onMessage(ValidateOrderByConsumer.class, this::validateOrderForConsumer)
+                            .build();
     }
-  }
+
+    private Message validateOrderForConsumer(CommandMessage<ValidateOrderByConsumer> cm) {
+        try {
+            consumerService.validateOrderForConsumer(cm.getCommand().getConsumerId(), cm.getCommand().getOrderTotal());
+            return withSuccess();
+        } catch (ConsumerVerificationFailedException e) {
+            return withFailure();
+        }
+    }
 }

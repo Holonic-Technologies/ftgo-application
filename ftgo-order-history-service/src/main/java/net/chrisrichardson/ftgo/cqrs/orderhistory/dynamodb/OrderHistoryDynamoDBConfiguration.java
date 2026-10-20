@@ -18,49 +18,49 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OrderHistoryDynamoDBConfiguration {
 
-  @Value("${aws.dynamodb.endpoint.url:#{null}}")
-  private String awsDynamodbEndpointUrl;
+    @Value("${aws.dynamodb.endpoint.url:#{null}}")
+    private String awsDynamodbEndpointUrl;
 
-  @Value("${aws.region}")
-  private String awsRegion;
+    @Value("${aws.region}")
+    private String awsRegion;
 
-  @Value("${aws.access.key_id:null}")
-  private String accessKey;
+    @Value("${aws.access.key_id:null}")
+    private String accessKey;
 
-  @Value("${aws.secret.access.key:null}")
-  private String secretKey;
+    @Value("${aws.secret.access.key:null}")
+    private String secretKey;
 
-  @Bean
-  public AmazonDynamoDB amazonDynamoDB() {
+    @Bean
+    public AmazonDynamoDB amazonDynamoDB() {
 
-    if (!StringUtils.isBlank(awsDynamodbEndpointUrl)) {
-      return AmazonDynamoDBClientBuilder
-          .standard()
-          .withEndpointConfiguration(
-              new AwsClientBuilder.EndpointConfiguration(awsDynamodbEndpointUrl, awsRegion))
-          .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
-          .build();
-    } else {
-      return AmazonDynamoDBClientBuilder
-              .standard()
-              .withRegion(awsRegion)
-              .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
-              .build();
+        if (!StringUtils.isBlank(awsDynamodbEndpointUrl)) {
+            return AmazonDynamoDBClientBuilder
+                    .standard()
+                    .withEndpointConfiguration(
+                            new AwsClientBuilder.EndpointConfiguration(awsDynamodbEndpointUrl, awsRegion))
+                    .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
+                    .build();
+        } else {
+            return AmazonDynamoDBClientBuilder
+                            .standard()
+                            .withRegion(awsRegion)
+                            .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
+                            .build();
+        }
     }
-  }
 
-  @Bean
-  public DynamoDB dynamoDB(AmazonDynamoDB client) {
-    return   new DynamoDB(client);
-  }
+    @Bean
+    public DynamoDB dynamoDB(AmazonDynamoDB client) {
+        return   new DynamoDB(client);
+    }
 
-  @Bean
-  public OrderHistoryDao orderHistoryDao(AmazonDynamoDB client, DynamoDB dynamoDB) {
-    return new OrderHistoryDaoDynamoDb(dynamoDB);
-  }
+    @Bean
+    public OrderHistoryDao orderHistoryDao(AmazonDynamoDB client, DynamoDB dynamoDB) {
+        return new OrderHistoryDaoDynamoDb(dynamoDB);
+    }
 
-  @Bean
-  public HealthIndicator dynamoDBHealthIndicator(DynamoDB dynamoDB) {
-    return new DynamoDBHealthIndicator(dynamoDB);
-  }
+    @Bean
+    public HealthIndicator dynamoDBHealthIndicator(DynamoDB dynamoDB) {
+        return new DynamoDBHealthIndicator(dynamoDB);
+    }
 }

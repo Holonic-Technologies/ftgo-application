@@ -11,41 +11,41 @@ import java.time.LocalDateTime;
 @Embeddable
 public class Action {
 
-  @Enumerated(EnumType.STRING)
-  private DeliveryActionType type;
-  private Address address;
-  private LocalDateTime time;
+    @Enumerated(EnumType.STRING)
+    private DeliveryActionType type;
+    private Address address;
+    private LocalDateTime time;
 
-  protected long deliveryId;
+    protected long deliveryId;
 
-  private Action() {
-  }
+    private Action() {
+    }
 
-  public Action(DeliveryActionType type, long deliveryId, Address address, LocalDateTime time) {
-    this.type = type;
-    this.deliveryId = deliveryId;
-    this.address = address;
-    this.time = time;
-  }
+    public Action(DeliveryActionType type, long deliveryId, Address address, LocalDateTime time) {
+        this.type = type;
+        this.deliveryId = deliveryId;
+        this.address = address;
+        this.time = time;
+    }
 
-  public boolean actionFor(long deliveryId) {
-    return this.deliveryId == deliveryId;
-  }
+    public boolean actionFor(long deliveryId) {
+        return this.deliveryId == deliveryId;
+    }
 
-  public static Action makePickup(long deliveryId, Address pickupAddress, LocalDateTime pickupTime) {
-    return new Action(DeliveryActionType.PICKUP, deliveryId, pickupAddress, pickupTime);
-  }
+    public static Action makePickup(long deliveryId, Address pickupAddress, LocalDateTime pickupTime) {
+        return new Action(DeliveryActionType.PICKUP, deliveryId, pickupAddress, pickupTime);
+    }
 
-  public static Action makeDropoff(long deliveryId, Address deliveryAddress, LocalDateTime deliveryTime) {
-    return new Action(DeliveryActionType.DROPOFF, deliveryId, deliveryAddress, deliveryTime);
-  }
+    public static Action makeDropoff(long deliveryId, Address deliveryAddress, LocalDateTime deliveryTime) {
+        return new Action(DeliveryActionType.DROPOFF, deliveryId, deliveryAddress, deliveryTime);
+    }
 
 
-  public DeliveryActionType getType() {
-    return type;
-  }
+    public DeliveryActionType getType() {
+        return type;
+    }
 
-  public Address getAddress() {
-    return address;
-  }
+    public Address getAddress() {
+        return address;
+    }
 }
