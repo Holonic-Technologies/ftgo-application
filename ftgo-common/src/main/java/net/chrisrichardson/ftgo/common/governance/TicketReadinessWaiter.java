@@ -3,7 +3,8 @@ package net.chrisrichardson.ftgo.common.governance;
 public class TicketReadinessWaiter {
 
   public void awaitReady(Ticket ticket) {
-    while (!ticket.isReady()) {
+    boolean ready = ticket.isReady();
+    while (!ready) {
       Thread.yield();
     }
   }
