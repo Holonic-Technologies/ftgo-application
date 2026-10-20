@@ -5,6 +5,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 //@Embeddable
 //@Access(AccessType.FIELD)
@@ -59,6 +60,28 @@ public class Money {
 
   public Money add(Money delta) {
     return new Money(amount.add(delta.amount));
+  }
+
+  public Money subtract(Money delta) {
+    return new Money(amount.subtract(delta.amount));
+  }
+
+  public Money percentage(int percentage) {
+    BigDecimal rate = new BigDecimal(percentage)
+            .divide(new BigDecimal(100), 4, RoundingMode.HALF_UP);
+    return new Money(amount.multiply(rate).setScale(2, RoundingMode.HALF_UP));
+  }
+
+  public Money minimum(Money other) {
+    return amount.compareTo(other.amount) <= 0 ? this : other;
+  }
+
+  public boolean isGreaterThan(Money other) {
+    return amount.compareTo(other.amount) > 0;
+  }
+
+  public boolean isNegative() {
+    return amount.signum() < 0;
   }
 
   public boolean isGreaterThanOrEqual(Money other) {
