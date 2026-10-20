@@ -25,64 +25,64 @@ import java.util.Optional;
 @Import({TramEventsPublisherConfiguration.class, SagaOrchestratorConfiguration.class, CommonConfiguration.class})
 public class OrderServiceConfiguration {
 
-  @Bean
-  public OrderService orderService(SagaInstanceFactory sagaInstanceFactory,
-                                   RestaurantRepository restaurantRepository,
-                                   OrderRepository orderRepository,
-                                   DomainEventPublisher eventPublisher,
-                                   CreateOrderSaga createOrderSaga,
-                                   CancelOrderSaga cancelOrderSaga,
-                                   ReviseOrderSaga reviseOrderSaga,
-                                   OrderDomainEventPublisher orderAggregateEventPublisher,
-                                   Optional<MeterRegistry> meterRegistry) {
+    @Bean
+    public OrderService orderService(SagaInstanceFactory sagaInstanceFactory,
+                                                                      RestaurantRepository restaurantRepository,
+                                                                      OrderRepository orderRepository,
+                                                                      DomainEventPublisher eventPublisher,
+                                                                      CreateOrderSaga createOrderSaga,
+                                                                      CancelOrderSaga cancelOrderSaga,
+                                                                      ReviseOrderSaga reviseOrderSaga,
+                                                                      OrderDomainEventPublisher orderAggregateEventPublisher,
+                                                                      Optional<MeterRegistry> meterRegistry) {
 
-    return new OrderService(sagaInstanceFactory, orderRepository, eventPublisher, restaurantRepository,
-            createOrderSaga, cancelOrderSaga, reviseOrderSaga, orderAggregateEventPublisher, meterRegistry);
-  }
+        return new OrderService(sagaInstanceFactory, orderRepository, eventPublisher, restaurantRepository,
+                        createOrderSaga, cancelOrderSaga, reviseOrderSaga, orderAggregateEventPublisher, meterRegistry);
+    }
 
-  @Bean
-  public CreateOrderSaga createOrderSaga(OrderServiceProxy orderService, ConsumerServiceProxy consumerService, KitchenServiceProxy kitchenServiceProxy, AccountingServiceProxy accountingService) {
-    return new CreateOrderSaga(orderService, consumerService, kitchenServiceProxy, accountingService);
-  }
+    @Bean
+    public CreateOrderSaga createOrderSaga(OrderServiceProxy orderService, ConsumerServiceProxy consumerService, KitchenServiceProxy kitchenServiceProxy, AccountingServiceProxy accountingService) {
+        return new CreateOrderSaga(orderService, consumerService, kitchenServiceProxy, accountingService);
+    }
 
-  @Bean
-  public CancelOrderSaga cancelOrderSaga() {
-    return new CancelOrderSaga();
-  }
+    @Bean
+    public CancelOrderSaga cancelOrderSaga() {
+        return new CancelOrderSaga();
+    }
 
-  @Bean
-  public ReviseOrderSaga reviseOrderSaga() {
-    return new ReviseOrderSaga();
-  }
+    @Bean
+    public ReviseOrderSaga reviseOrderSaga() {
+        return new ReviseOrderSaga();
+    }
 
 
-  @Bean
-  public KitchenServiceProxy kitchenServiceProxy() {
-    return new KitchenServiceProxy();
-  }
+    @Bean
+    public KitchenServiceProxy kitchenServiceProxy() {
+        return new KitchenServiceProxy();
+    }
 
-  @Bean
-  public OrderServiceProxy orderServiceProxy() {
-    return new OrderServiceProxy();
-  }
+    @Bean
+    public OrderServiceProxy orderServiceProxy() {
+        return new OrderServiceProxy();
+    }
 
-  @Bean
-  public ConsumerServiceProxy consumerServiceProxy() {
-    return new ConsumerServiceProxy();
-  }
+    @Bean
+    public ConsumerServiceProxy consumerServiceProxy() {
+        return new ConsumerServiceProxy();
+    }
 
-  @Bean
-  public AccountingServiceProxy accountingServiceProxy() {
-    return new AccountingServiceProxy();
-  }
+    @Bean
+    public AccountingServiceProxy accountingServiceProxy() {
+        return new AccountingServiceProxy();
+    }
 
-  @Bean
-  public OrderDomainEventPublisher orderAggregateEventPublisher(DomainEventPublisher eventPublisher) {
-    return new OrderDomainEventPublisher(eventPublisher);
-  }
+    @Bean
+    public OrderDomainEventPublisher orderAggregateEventPublisher(DomainEventPublisher eventPublisher) {
+        return new OrderDomainEventPublisher(eventPublisher);
+    }
 
-  @Bean
-  public MeterRegistryCustomizer meterRegistryCustomizer(@Value("${spring.application.name}") String serviceName) {
-    return registry -> registry.config().commonTags("service", serviceName);
-  }
+    @Bean
+    public MeterRegistryCustomizer meterRegistryCustomizer(@Value("${spring.application.name}") String serviceName) {
+        return registry -> registry.config().commonTags("service", serviceName);
+    }
 }
