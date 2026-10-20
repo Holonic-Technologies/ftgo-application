@@ -1,6 +1,7 @@
 package net.chrisrichardson.ftgo.orderservice.sagas.cancelorder;
 
 import net.chrisrichardson.ftgo.common.Money;
+import net.chrisrichardson.ftgo.orderservice.domain.CancellationRequest;
 
 public class CancelOrderSagaData  {
 
@@ -9,14 +10,25 @@ public class CancelOrderSagaData  {
   private long restaurantId;
   private long consumerId;
   private Money orderTotal;
+  private CancellationRequest cancellationRequest;
 
   private CancelOrderSagaData() {
   }
 
   public CancelOrderSagaData(long consumerId, long orderId, Money orderTotal) {
+    this(consumerId, orderId, orderTotal, null);
+  }
+
+  public CancelOrderSagaData(
+          long consumerId,
+          long orderId,
+          Money orderTotal,
+          CancellationRequest cancellationRequest
+  ) {
     this.consumerId = consumerId;
     this.orderId = orderId;
     this.orderTotal = orderTotal;
+    this.cancellationRequest = cancellationRequest;
   }
 
   public Long getOrderId() {
@@ -46,5 +58,9 @@ public class CancelOrderSagaData  {
 
   public Money getOrderTotal() {
     return orderTotal;
+  }
+
+  public CancellationRequest getCancellationRequest() {
+    return cancellationRequest;
   }
 }

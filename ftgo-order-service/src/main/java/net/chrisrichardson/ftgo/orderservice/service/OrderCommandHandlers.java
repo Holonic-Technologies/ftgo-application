@@ -58,7 +58,7 @@ public class OrderCommandHandlers {
   public Message beginCancel(CommandMessage<BeginCancelCommand> cm) {
     long orderId = cm.getCommand().getOrderId();
     try {
-      orderService.beginCancel(orderId);
+      orderService.beginCancel(orderId, cm.getCommand().getCancellationRequest());
       return withSuccess();
     } catch (UnsupportedStateTransitionException e) {
       return withFailure();

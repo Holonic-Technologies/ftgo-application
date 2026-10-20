@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.Instant;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.toList;
@@ -114,9 +115,24 @@ public class OrderService {
 
   @Transactional
   public Order cancel(Long orderId) {
+    return cancel(orderId, CancellationReason.OTHER);
+  }
+
+  @Transactional
+  public Order cancel(Long orderId, CancellationReason reason) {
     Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new OrderNotFoundException(orderId));
-    CancelOrderSagaData sagaData = new CancelOrderSagaData(order.getConsumerId(), orderId, order.getOrderTotal());
+    CancellationRequest request = CancellationRequest.customer(
+            reason,
+            order.getConsumerId(),
+            Instant.now()
+    );
+    CancelOrderSagaData sagaData = new CancelOrderSagaData(
+            order.getConsumerId(),
+            orderId,
+            order.getOrderTotal(),
+            request
+    );
     sagaInstanceFactory.create(cancelOrderSaga, sagaData);
     return order;
   }
@@ -140,6 +156,12 @@ public class OrderService {
 
   public void beginCancel(long orderId) {
     updateOrder(orderId, Order::cancel);
+  }
+
+  public void beginCancel(long orderId, CancellationRequest request) {
+    updateOrder(orderId, order -> request == null
+            ? order.cancel()
+            : order.cancel(request));
   }
 
   public void undoCancel(long orderId) {

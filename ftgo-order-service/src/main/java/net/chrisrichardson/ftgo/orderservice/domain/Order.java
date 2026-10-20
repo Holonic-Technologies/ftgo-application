@@ -7,6 +7,7 @@ import net.chrisrichardson.ftgo.common.UnsupportedStateTransitionException;
 import net.chrisrichardson.ftgo.orderservice.api.events.*;
 
 import javax.persistence.*;
+import java.time.Instant;
 import java.util.List;
 
 import static net.chrisrichardson.ftgo.orderservice.api.events.OrderState.APPROVED;
@@ -41,6 +42,15 @@ public class Order {
 
   @Enumerated(EnumType.STRING)
   private OrderState state;
+
+  @Enumerated(EnumType.STRING)
+  private OrderState stateBeforeCancellation;
+
+  @Enumerated(EnumType.STRING)
+  private CancellationReason cancellationReason;
+
+  private String cancellationRequestedBy;
+  private Instant cancellationRequestedAt;
 
   private Long consumerId;
   private Long restaurantId;
@@ -85,10 +95,26 @@ public class Order {
   }
 
   public List<OrderDomainEvent> cancel() {
+    return cancel(CancellationRequest.system(Instant.now()));
+  }
+
+  public List<OrderDomainEvent> cancel(CancellationRequest request) {
+    OrderState previousState = state;
     switch (state) {
+      case APPROVAL_PENDING:
       case APPROVED:
+      case REVISION_PENDING:
+        this.stateBeforeCancellation = previousState;
+        this.cancellationReason = request.getReason();
+        this.cancellationRequestedBy = request.getRequestedBy();
+        this.cancellationRequestedAt = request.getRequestedAt();
         this.state = OrderState.CANCEL_PENDING;
-        return emptyList();
+        return singletonList(new OrderCancelRequested(
+                previousState,
+                cancellationReason,
+                cancellationRequestedBy,
+                cancellationRequestedAt
+        ));
       default:
         throw new UnsupportedStateTransitionException(state);
     }
@@ -97,7 +123,8 @@ public class Order {
   public List<OrderDomainEvent> undoPendingCancel() {
     switch (state) {
       case CANCEL_PENDING:
-        this.state = OrderState.APPROVED;
+        this.state = stateBeforeCancellation;
+        clearCancellationRequest();
         return emptyList();
       default:
         throw new UnsupportedStateTransitionException(state);
@@ -112,6 +139,13 @@ public class Order {
       default:
         throw new UnsupportedStateTransitionException(state);
     }
+  }
+
+  private void clearCancellationRequest() {
+    this.stateBeforeCancellation = null;
+    this.cancellationReason = null;
+    this.cancellationRequestedBy = null;
+    this.cancellationRequestedAt = null;
   }
 
   public List<OrderDomainEvent> noteApproved() {
@@ -199,6 +233,22 @@ public class Order {
     return state;
   }
 
+  public OrderState getStateBeforeCancellation() {
+    return stateBeforeCancellation;
+  }
+
+  public CancellationReason getCancellationReason() {
+    return cancellationReason;
+  }
+
+  public String getCancellationRequestedBy() {
+    return cancellationRequestedBy;
+  }
+
+  public Instant getCancellationRequestedAt() {
+    return cancellationRequestedAt;
+  }
+
   public long getRestaurantId() {
     return restaurantId;
   }
@@ -208,4 +258,3 @@ public class Order {
     return consumerId;
   }
 }
-

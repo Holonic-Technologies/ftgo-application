@@ -52,9 +52,12 @@ public class OrderController {
   }
 
   @RequestMapping(path = "/{orderId}/cancel", method = RequestMethod.POST)
-  public ResponseEntity<GetOrderResponse> cancel(@PathVariable long orderId) {
+  public ResponseEntity<GetOrderResponse> cancel(
+          @PathVariable long orderId,
+          @RequestBody CancelOrderRequest request
+  ) {
     try {
-      Order order = orderService.cancel(orderId);
+      Order order = orderService.cancel(orderId, request.getReason());
       return new ResponseEntity<>(makeGetOrderResponse(order), HttpStatus.OK);
     } catch (OrderNotFoundException e) {
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
