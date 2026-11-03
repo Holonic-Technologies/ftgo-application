@@ -56,7 +56,6 @@ public class DeliveryService {
     delivery.cancel();
     if (assignedCourierId != null) {
       Courier courier = courierRepository.findById(assignedCourierId).get();
-      courier.cancelDelivery(delivery.getId());
     }
 
   }
