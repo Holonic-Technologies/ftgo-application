@@ -67,4 +67,21 @@ public class OrderTest {
 
     assertEquals(CHICKEN_VINDALOO_PRICE.multiply(10), order.getOrderTotal());
   }
+
+  @Test
+  public void shouldRejectPendingOrder() {
+    List<OrderDomainEvent> events = order.noteRejected();
+    assertEquals(OrderState.REJECTED, order.getState());
+    assertEquals(singletonList(new net.chrisrichardson.ftgo.orderservice.api.events.OrderRejected()), events);
+  }
+
+  @Test
+  public void shouldRejectCancellationBeforeApproval() {
+    try {
+      order.cancel();
+      org.junit.Assert.fail("Cancellation must reject an unapproved order");
+    } catch (net.chrisrichardson.ftgo.common.UnsupportedStateTransitionException expected) {
+      assertEquals(OrderState.APPROVAL_PENDING, order.getState());
+    }
+  }
 }
