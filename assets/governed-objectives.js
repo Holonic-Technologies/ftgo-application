@@ -322,15 +322,16 @@ function clearMethodHolonHover(terrain,skipPinnedRestore=false){
  if(!skipPinnedRestore&&terrain.dataset.pinnedMethod){const pinned=[...terrain.querySelectorAll('.workflow-impact-method')].find(node=>node.dataset.methodId===terrain.dataset.pinnedMethod);if(pinned){showMethodHolonHover(pinned,true);return;}}
  if(!skipPinnedRestore&&terrain.dataset.pinnedHolon){const pinned=[...terrain.querySelectorAll('[data-holon-viewer-id]')].find(node=>node.dataset.holonViewerId===terrain.dataset.pinnedHolon);if(pinned){showHolonViewerPreview(pinned,true);return;}}
  const status=terrain.querySelector('[data-holon-hover-status]');
- if(status)status.textContent='Hover a method to inspect its holon memberships; click to open its source changes.';
+ if(status)status.textContent=terrain.dataset.compactBoundary?'Select a changed method to explore the behavior it could affect.':'Hover a method to inspect its holon memberships; click to open its source changes.';
 }
 function showMethodHolonHover(method,pinned=false){
  const terrain=method?.closest('[data-method-terrain]');if(!terrain)return;
  clearMethodHolonHover(terrain,true);
+ if(terrain.dataset.compactBoundary)return;
  const holonIds=String(method.dataset.holonIds||'').split(/\s+/).filter(Boolean),label=method.dataset.methodLabel||method.dataset.methodId;
  method.classList.add('holon-origin');
  const status=terrain.querySelector('[data-holon-hover-status]');
- if(!holonIds.length){if(status)status.textContent=`${label} is not assigned to a flow holon.`;return;}
+ if(!holonIds.length){if(status)status.textContent=terrain.dataset.compactBoundary?label:`${label} has no membership recorded in this review.`;return;}
  const active=new Map(holonIds.map((id,index)=>[id,index]));
  const holonLabels=new Map([...terrain.querySelectorAll('[data-holon-description-id]')].map(node=>[node.dataset.holonDescriptionId,node.dataset.holonLabel]));
  terrain.classList.add('is-holon-hovering');
@@ -375,13 +376,20 @@ function nearestTerrainMethod(event){
  if(!matrix||!Number.isFinite(event.clientX)||!Number.isFinite(event.clientY))return null;
  const point=svg.createSVGPoint();point.x=event.clientX;point.y=event.clientY;
  const local=point.matrixTransform(matrix.inverse());
- let nearest=null,distance=14*14;
- for(const method of svg.querySelectorAll('.workflow-impact-method')){
-  const dot=method.querySelector('.workflow-method-dot');if(!dot)continue;
-  const dx=Number(dot.getAttribute('cx'))-local.x,dy=Number(dot.getAttribute('cy'))-local.y,d=dx*dx+dy*dy;
-  if(d<distance||(d===distance&&nearest&&method.dataset.methodId<nearest.dataset.methodId)){nearest=method;distance=d;}
+ const nearest=(selector,radius)=>{
+  let best=null,distance=radius*radius;
+  for(const method of svg.querySelectorAll(selector)){
+   const dot=method.querySelector('.workflow-method-dot');if(!dot)continue;
+   const dx=Number(dot.getAttribute('cx'))-local.x,dy=Number(dot.getAttribute('cy'))-local.y,d=dx*dx+dy*dy;
+   if(d<distance||(d===distance&&best&&method.dataset.methodId<best.dataset.methodId)){best=method;distance=d;}
+  }
+  return best;
+ };
+ if(svg.closest?.('[data-compact-boundary="true"]')){
+  const changed=nearest('.workflow-impact-method.direct-pr-intersection',18);
+  if(changed)return changed;
  }
- return nearest;
+ return nearest('.workflow-impact-method',14);
 }
 document.addEventListener('click',event=>{
  const button=nearestTerrainMethod(event)||event.target.closest('button,[data-terrain-method],[data-terrain-holon],[data-governed-holon],[data-governed-method]');if(!button)return;
@@ -392,7 +400,7 @@ document.addEventListener('click',event=>{
  else if(button.dataset.governedArea){state.governedArea=button.dataset.governedArea;state.workflowTransition=null;state.holonViewerOpen=false;if(!button.closest('.holon-related-workflows'))state.governedHolon=null;state.governedMethod=null;state.governedObligation=null;render();const board=[...(document.querySelectorAll?.('[data-review-scope]')||[])].find(node=>node.dataset.reviewScope===scope);const terrain=board?.querySelector?.('[data-objective-focus]');terrain?.scrollIntoView?.({block:'nearest'});}
  else if(button.dataset.workflowObligation){state.governedObligation=button.dataset.workflowObligation;state.governedHolon=null;state.governedMethod=null;render();}
  else if(button.dataset.governedHolon){const holonId=button.dataset.governedHolon;state.governedHolon=holonId;state.governedMethod=null;state.holonViewerOpen=true;render();const board=[...(document.querySelectorAll?.('[data-review-scope]')||[])].find(node=>node.dataset.reviewScope===scope),terrain=board?.querySelector?.('[data-method-terrain]'),viewer=terrain?.querySelector?.('[data-holon-viewer-dialog]'),holon=[...(terrain?.querySelectorAll?.('[data-holon-viewer-id]')||[])].find(node=>node.dataset.holonViewerId===holonId);viewer?.show?.();if(terrain)terrain.dataset.pinnedHolon=holonId;if(holon){showHolonViewerPreview(holon,true);holon.scrollIntoView?.({block:'nearest'});}}
- else if(button.dataset.governedMethod){const methodId=button.dataset.governedMethod,currentTerrain=button.closest('[data-method-terrain]'),sourceMethod=[...(currentTerrain?.querySelectorAll?.('.workflow-impact-method')||[])].find(node=>node.dataset.methodId===methodId),relatedIds=String(sourceMethod?.dataset.relatedWorkflowIds||'').split(/\s+/).filter(Boolean),relatedNames=String(sourceMethod?.dataset.relatedWorkflowNames||'').split(' | ').filter(Boolean);state.workflowTransition=null;state.holonViewerOpen=false;if(relatedIds.length&&!relatedIds.includes(state.governedArea)){state.governedArea=relatedIds[0];state.workflowTransition=`Switched to ${relatedNames[0]||'the related workflow'} because ${sourceMethod?.dataset.methodLabel||'this method'} supports it.`;}state.governedMethod=methodId;render();const board=[...(document.querySelectorAll?.('[data-review-scope]')||[])].find(node=>node.dataset.reviewScope===scope),terrain=board?.querySelector?.('[data-method-terrain]'),method=[...(terrain?.querySelectorAll?.('.workflow-impact-method')||[])].find(node=>node.dataset.methodId===methodId),inspector=terrain?.querySelector?.('.workflow-holon-inspector');if(terrain)terrain.dataset.pinnedMethod=methodId;if(method)showMethodHolonHover(method,true);inspector?.scrollIntoView?.({block:'nearest',behavior:'smooth'});}
+ else if(button.dataset.governedMethod){const methodId=button.dataset.governedMethod,currentTerrain=button.closest('[data-method-terrain]'),sourceMethod=[...(currentTerrain?.querySelectorAll?.('.workflow-impact-method')||[])].find(node=>node.dataset.methodId===methodId),relatedIds=String(sourceMethod?.dataset.relatedWorkflowIds||'').split(/\s+/).filter(Boolean),relatedNames=String(sourceMethod?.dataset.relatedWorkflowNames||'').split(' | ').filter(Boolean);state.workflowTransition=null;state.holonViewerOpen=false;if(relatedIds.length&&!relatedIds.includes(state.governedArea)){state.governedArea=relatedIds[0];state.workflowTransition=`Switched to ${relatedNames[0]||'the related workflow'} because ${sourceMethod?.dataset.methodLabel||'this method'} supports it.`;}state.governedMethod=methodId;render();const board=[...(document.querySelectorAll?.('[data-review-scope]')||[])].find(node=>node.dataset.reviewScope===scope),terrain=board?.querySelector?.('[data-method-terrain]'),method=[...(terrain?.querySelectorAll?.('.workflow-impact-method')||[])].find(node=>node.dataset.methodId===methodId),inspector=terrain?.querySelector?.('.workflow-holon-inspector');if(terrain)terrain.dataset.pinnedMethod=methodId;if(method)showMethodHolonHover(method,true);if(!terrain?.dataset.compactBoundary)inspector?.scrollIntoView?.({block:'nearest',behavior:'smooth'});}
  else if(button.dataset.terrainHolon){state.governedHolon=button.dataset.terrainHolon;state.governedMethod=null;render();}
  else if(button.dataset.terrainMethod){state.governedMethod=button.dataset.terrainMethod;state.governedHolon=null;render();}
  else if(button.hasAttribute('data-terrain-membership')){state.terrainMembership=!state.terrainMembership;render();}

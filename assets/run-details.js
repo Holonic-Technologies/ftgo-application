@@ -214,7 +214,53 @@ function findingGapsMarkup(item,packet){
  return `<section class="finding-gaps" aria-label="Analysis limits for this finding"><h4>Analysis limits for this finding</h4><ul>${notes.map(note=>`<li class="${escapeHtml(note.kind)}">${escapeHtml(note.text)}</li>`).join('')}</ul><p>These mark evidence the analysis did not follow or a route it traced. They are not defects. Check them before relying on this finding.</p></section>`;
 }
 
-const api={runDetails,runDetailsMarkup,checkCoverage,findingGaps,findingGapsMarkup,itemFlows,ownerName};
+// The component versions that produced this run (review_service/VERSIONS.md), this page's own release, and
+// the item's own rule, as a hidden HTML comment: nothing shows on the page; search the live page (developer tools,
+// Elements) for __VERSION. Lines read like the PR message's span: "<name> [<id>]: <version> (key=value, ...)".
+// Values come only from the record; a missing one says "not recorded", never a guess.
+const VERSION_SAFE=/[A-Za-z0-9 \/:@+~._\-'*!$;?#{}|`]/;
+// As governance_comment.versions_quote: percent-encode anything that could end the comment or break a line.
+function versionQuote(value,first=false){
+ let text=[...String(value??'')].map(ch=>VERSION_SAFE.test(ch)?ch:[...new TextEncoder().encode(ch)].map(byte=>'%'+byte.toString(16).toUpperCase().padStart(2,'0')).join('')).join('');
+ if(text[0]===' '||(first&&text&&text[0]!=='%'&&!/[A-Za-z]/.test(text[0])))text='%'+text.charCodeAt(0).toString(16).toUpperCase().padStart(2,'0')+text.slice(1);
+ if(text.endsWith(' '))text=text.slice(0,-1)+'%20';
+ return text;
+}
+function producedByMarkup(status,packet,release,item){
+ const record=[status?.codeintent_versions,packet?.codeintent_versions].find(value=>value&&Array.isArray(value.components));
+ const line=(name,id,version,detail)=>{
+  const pairs=detail&&typeof detail==='object'?Object.entries(detail).filter(([,value])=>value!=null&&value!==''):[];
+  return `${versionQuote(name,true)} [${versionQuote(id)}]: ${versionQuote(version||'not recorded')}`+
+   (pairs.length?` (${pairs.map(([key,value])=>`${versionQuote(key)}=${versionQuote(value)}`).join(', ')})`:'');
+ };
+ const lines=record?record.components.filter(part=>part&&typeof part==='object'&&part.id!=='page')
+   .map(part=>{
+    // As governance_comment.versioned: a version that is not a commit SHA (an earlier vNNN) shows as unrecorded.
+    const sha=part.version==='unrecorded'||/^[0-9a-f]{40}$/.test(String(part.version??''));
+    return line(part.name||part.id,part.id,sha?part.version:'unrecorded',
+     sha||part.version==null||part.version===''?part.detail:{...(part.detail||{}),legacy_version:part.version});
+   })
+  :[line('Pipeline components','record','not recorded')];
+ const published=release&&!release.local&&!release.unknown;
+ // null: still loading; unknown: the release record could not be read; local: no release record exists.
+ // The page's version is the full commit it was published from (ui_commit); anything else is "unrecorded".
+ const pageVersion=()=>typeof release.ui_commit==='string'&&/^[0-9a-f]{40}$/.test(release.ui_commit)?release.ui_commit:'unrecorded';
+ lines.push(line('Review page','page',published?pageVersion():release?.local?'local checkout (unpublished)':release?.unknown?'not recorded':'loading…',
+  published?{...(release.ui_dirty==='true'?{dirty:'true'}:{}),source_branch:release.source_branch,backend_image:release.backend_image}:null));
+ const standard=item?.findings?.[0]?.kind==='standard'?item.findings[0]:null;
+ if(standard){
+  lines.push(line('Rule','rule',standard.rule_id),line('Rule version','rule-version',standard.rule_version));
+  if(standard.detected_by)lines.push(line('Detected by','detected-by',standard.detected_by+(standard.static_check?` (${standard.static_check})`:'')));
+ }else if(item?.objective){
+  const baseline=status?.governance_baseline;
+  if(baseline?.governance_version)lines.push(line('Governance version','governance-version',String(baseline.governance_version).replace(/^gov:/,'').slice(0,12),{version_id:baseline.governance_version}));
+  if(baseline?.authority?.ledger_release)lines.push(line('Ledger release','ledger-release',String(baseline.authority.ledger_release).slice(0,12),{ledger_release:baseline.authority.ledger_release}));
+  lines.push(line('Objective','objective',item.objectiveId||item.objective_id||item.concept||item.id));
+ }
+ return `<!-- __VERSION codeintent-versions-v1\n${lines.join('\n')}\n-->`;
+}
+
+const api={runDetails,runDetailsMarkup,checkCoverage,findingGaps,findingGapsMarkup,itemFlows,ownerName,producedByMarkup};
 root.codeIntentRunDetails=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

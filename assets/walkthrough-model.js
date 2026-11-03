@@ -35,7 +35,8 @@ function isDescriptionRoute(params){
 }
 function descriptionItem(items,packet,summary,checks,checkId,issue){
  const check=(checks||[]).find(row=>row.id===checkId);
- const finding=(check?.findings||[]).find(row=>row.id===issue||row.ref===issue)||(!issue?check?.findings?.[0]:null);
+ const available=check?.id==='improper_tests'?[...(check.findings||[]),...(check.watch_only_findings||[])]:check?.findings||[];
+ const finding=available.find(row=>row.id===issue||row.ref===issue)||(!issue?available[0]:null);
  const key=issue||finding?.id||finding?.ref;
  if(!key)return null;
  const ids=new Set([key,finding?.id].filter(Boolean));

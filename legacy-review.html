@@ -1,6 +1,11 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
+<script>
+const currentReview=new URL('index.html',location.href);
+currentReview.search=location.search;currentReview.hash=location.hash;
+location.replace(currentReview.href);
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="codeintent-source" content="github-lambda-workflow/review-prototype">
 <title>CodeIntent · Pull request review</title>
@@ -421,6 +426,7 @@ if(LIVE)initLive();else {replaying=false;document.querySelector('#replay').close
 <script src="assets/semantic-review.js"></script>
 <script src="assets/intent-impact.js"></script>
 <script src="assets/objective-summary.js"></script>
+<script src="assets/intent-finding.js"></script>
 <script src="assets/readable-review.js"></script>
 <script src="assets/sha256.js"></script>
 <script src="assets/pinned-detail.js"></script>
