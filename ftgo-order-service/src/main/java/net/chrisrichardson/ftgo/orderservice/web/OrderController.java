@@ -44,10 +44,10 @@ public class OrderController {
   @RequestMapping(path = "/{orderId}", method = RequestMethod.GET)
   public ResponseEntity<GetOrderResponse> getOrder(@PathVariable long orderId) {
     Optional<Order> order = orderRepository.findById(orderId);
-    return order.map(o -> new ResponseEntity<>(makeGetOrderResponse(o), HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    return order.map(o -> new ResponseEntity<>(toOrderResponse(o), HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
   }
 
-  private GetOrderResponse makeGetOrderResponse(Order order) {
+  private GetOrderResponse toOrderResponse(Order order) {
     return new GetOrderResponse(order.getId(), order.getState(), order.getOrderTotal());
   }
 
@@ -55,7 +55,7 @@ public class OrderController {
   public ResponseEntity<GetOrderResponse> cancel(@PathVariable long orderId) {
     try {
       Order order = orderService.cancel(orderId);
-      return new ResponseEntity<>(makeGetOrderResponse(order), HttpStatus.OK);
+      return new ResponseEntity<>(toOrderResponse(order), HttpStatus.OK);
     } catch (OrderNotFoundException e) {
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
@@ -65,7 +65,7 @@ public class OrderController {
   public ResponseEntity<GetOrderResponse> revise(@PathVariable long orderId, @RequestBody ReviseOrderRequest request) {
     try {
       Order order = orderService.reviseOrder(orderId, new OrderRevision(Optional.empty(), request.getRevisedOrderLineItems()));
-      return new ResponseEntity<>(makeGetOrderResponse(order), HttpStatus.OK);
+      return new ResponseEntity<>(toOrderResponse(order), HttpStatus.OK);
     } catch (OrderNotFoundException e) {
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
