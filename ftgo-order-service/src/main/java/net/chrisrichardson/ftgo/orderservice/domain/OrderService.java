@@ -186,4 +186,14 @@ public class OrderService {
     }).orElseThrow(RuntimeException::new);
   }
 
+
+  public String readMenuTitle(java.nio.file.Path menuFile) throws java.io.IOException {
+    java.io.BufferedReader reader = java.nio.file.Files.newBufferedReader(menuFile);
+    String title = reader.readLine();
+    if (title == null) {
+      return "";
+    }
+    reader.close();
+    return title;
+  }
 }
