@@ -77,9 +77,9 @@ public class OrderService {
             Order.createOrder(consumerId, restaurant, deliveryInformation, orderLineItems);
 
     Order order = orderAndEvents.result;
-    orderRepository.save(order);
-
     orderAggregateEventPublisher.publish(order, orderAndEvents.events);
+
+    orderRepository.save(order);
 
     OrderDetails orderDetails = new OrderDetails(consumerId, restaurantId, orderLineItems, order.getOrderTotal());
 
