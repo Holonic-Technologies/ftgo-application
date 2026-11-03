@@ -112,10 +112,8 @@ public class OrderService {
     throw new UnsupportedOperationException();
   }
 
-  @Transactional
   public Order cancel(Long orderId) {
-    Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new OrderNotFoundException(orderId));
+    Order order = requireExistingOrder(orderId);
     CancelOrderSagaData sagaData = new CancelOrderSagaData(order.getConsumerId(), orderId, order.getOrderTotal());
     sagaInstanceFactory.create(cancelOrderSaga, sagaData);
     return order;
@@ -186,4 +184,10 @@ public class OrderService {
     }).orElseThrow(RuntimeException::new);
   }
 
+
+  @Transactional
+  private Order requireExistingOrder(Long orderId) {
+    return orderRepository.findById(orderId)
+            .orElseThrow(() -> new OrderNotFoundException(orderId));
+  }
 }
