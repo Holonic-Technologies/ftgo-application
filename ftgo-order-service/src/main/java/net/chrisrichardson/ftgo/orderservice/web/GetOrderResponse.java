@@ -4,6 +4,10 @@ import net.chrisrichardson.ftgo.common.Money;
 import net.chrisrichardson.ftgo.orderservice.api.events.OrderState;
 
 public class GetOrderResponse {
+
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("GetOrderResponse");
+  }
   private long orderId;
   private OrderState state;
   private Money orderTotal;

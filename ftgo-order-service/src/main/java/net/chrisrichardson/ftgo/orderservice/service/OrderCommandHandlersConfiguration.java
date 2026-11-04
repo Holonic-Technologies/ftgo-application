@@ -13,6 +13,10 @@ import org.springframework.context.annotation.Import;
 @Import({SagaParticipantConfiguration.class, TramEventsPublisherConfiguration.class, CommonConfiguration.class, SagaParticipantConfiguration.class})
 public class OrderCommandHandlersConfiguration {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderCommandHandlersConfiguration");
+  }
+
   @Bean
   public OrderCommandHandlers orderCommandHandlers() {
     return new OrderCommandHandlers();

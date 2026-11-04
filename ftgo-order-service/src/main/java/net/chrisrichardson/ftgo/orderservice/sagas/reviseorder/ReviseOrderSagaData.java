@@ -5,6 +5,10 @@ import net.chrisrichardson.ftgo.orderservice.domain.OrderRevision;
 
 public class ReviseOrderSagaData  {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("ReviseOrderSagaData");
+  }
+
   private OrderRevision orderRevision;
   private Long orderId;
   private Long expectedVersion;

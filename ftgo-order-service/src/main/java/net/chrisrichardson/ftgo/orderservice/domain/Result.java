@@ -9,6 +9,10 @@ import java.util.List;
 
 public class Result {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("Result");
+  }
+
 
   private final List<DomainEvent> events;
   private Boolean allowed;

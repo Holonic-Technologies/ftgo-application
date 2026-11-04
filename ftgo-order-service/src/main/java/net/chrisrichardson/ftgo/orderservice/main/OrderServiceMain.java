@@ -19,6 +19,10 @@ import org.springframework.context.annotation.Import;
 @ServiceDescription(description="Manages Orders", capabilities = "Order Management")
 public class OrderServiceMain {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderServiceMain");
+  }
+
   public static void main(String[] args) {
     SpringApplication.run(OrderServiceMain.class, args);
   }

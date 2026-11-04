@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "/restaurants")
 public class RestaurantController {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("RestaurantController");
+  }
+
   @Autowired
   private RestaurantRepository restaurantRepository;
 
