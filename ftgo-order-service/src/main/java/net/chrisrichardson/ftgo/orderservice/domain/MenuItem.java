@@ -13,6 +13,10 @@ import javax.persistence.Embeddable;
 @Access(AccessType.FIELD)
 public class MenuItem {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("MenuItem");
+  }
+
   private String id;
   private String name;
   private Money price;

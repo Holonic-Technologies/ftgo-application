@@ -8,6 +8,10 @@ import net.chrisrichardson.ftgo.consumerservice.api.ValidateOrderByConsumer;
 
 public class ConsumerServiceProxy {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("ConsumerServiceProxy");
+  }
+
 
   public final CommandEndpoint<ValidateOrderByConsumer> validateOrder= CommandEndpointBuilder
           .forCommand(ValidateOrderByConsumer.class)

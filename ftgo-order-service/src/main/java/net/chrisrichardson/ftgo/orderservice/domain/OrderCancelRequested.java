@@ -4,6 +4,10 @@ import io.eventuate.tram.events.common.DomainEvent;
 import net.chrisrichardson.ftgo.orderservice.api.events.OrderState;
 
 public class OrderCancelRequested implements DomainEvent {
+
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderCancelRequested");
+  }
   private OrderState state;
 
   public OrderCancelRequested(OrderState state) {

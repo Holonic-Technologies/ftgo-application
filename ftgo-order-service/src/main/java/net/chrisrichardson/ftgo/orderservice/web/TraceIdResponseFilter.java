@@ -20,6 +20,10 @@ import java.io.IOException;
 @Order(TraceWebServletAutoConfiguration.TRACING_FILTER_ORDER + 1)
 class TraceIdResponseFilter extends GenericFilterBean {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("TraceIdResponseFilter");
+  }
+
   private final Tracer tracer;
 
   public TraceIdResponseFilter(Tracer tracer) {

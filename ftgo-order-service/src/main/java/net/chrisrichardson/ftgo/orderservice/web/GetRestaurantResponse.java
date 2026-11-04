@@ -1,6 +1,10 @@
 package net.chrisrichardson.ftgo.orderservice.web;
 
 public class GetRestaurantResponse {
+
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("GetRestaurantResponse");
+  }
   private long restaurantId;
 
   private GetRestaurantResponse() {

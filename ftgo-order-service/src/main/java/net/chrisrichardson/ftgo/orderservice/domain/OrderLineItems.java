@@ -14,6 +14,10 @@ import java.util.Optional;
 @Embeddable
 public class OrderLineItems {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderLineItems");
+  }
+
   @ElementCollection
   @CollectionTable(name = "order_line_items")
   private List<OrderLineItem> lineItems;

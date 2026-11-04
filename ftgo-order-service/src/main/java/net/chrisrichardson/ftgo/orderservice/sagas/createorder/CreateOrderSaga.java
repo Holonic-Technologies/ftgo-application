@@ -9,6 +9,10 @@ import org.slf4j.LoggerFactory;
 
 public class CreateOrderSaga implements SimpleSaga<CreateOrderSagaState> {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("CreateOrderSaga");
+  }
+
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -23,7 +27,10 @@ public class CreateOrderSaga implements SimpleSaga<CreateOrderSagaState> {
               .invokeParticipant(consumerService.validateOrder, CreateOrderSagaState::makeValidateOrderByConsumerCommand)
             .step()
               .invokeParticipant(kitchenService.create, CreateOrderSagaState::makeCreateTicketCommand)
-              .onReply(CreateTicketReply.class, CreateOrderSagaState::handleCreateTicketReply)
+              .onReply(CreateTicketReply.class, (data, reply) -> {
+                data.handleCreateTicketReply(reply);
+                kitchenService.recordTicketReply(data.getOrderId(), reply);
+              })
               .withCompensation(kitchenService.cancel, CreateOrderSagaState::makeCancelCreateTicketCommand)
             .step()
                 .invokeParticipant(accountingService.authorize, CreateOrderSagaState::makeAuthorizeCommand)
