@@ -16,7 +16,6 @@ import net.chrisrichardson.ftgo.orderservice.sagas.reviseorder.ReviseOrderSagaDa
 import net.chrisrichardson.ftgo.orderservice.web.MenuItemIdAndQuantity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +35,8 @@ public class OrderService {
 
   private RestaurantRepository restaurantRepository;
 
+  private RestaurantLookupService restaurantLookupService;
+
   private CreateOrderSaga createOrderSaga;
 
   private CancelOrderSaga cancelOrderSaga;
@@ -50,6 +51,7 @@ public class OrderService {
                       OrderRepository orderRepository,
                       DomainEventPublisher eventPublisher,
                       RestaurantRepository restaurantRepository,
+                      RestaurantLookupService restaurantLookupService,
                       CreateOrderSaga createOrderSaga,
                       CancelOrderSaga cancelOrderSaga,
                       ReviseOrderSaga reviseOrderSaga,
@@ -59,6 +61,7 @@ public class OrderService {
     this.sagaInstanceFactory = sagaInstanceFactory;
     this.orderRepository = orderRepository;
     this.restaurantRepository = restaurantRepository;
+    this.restaurantLookupService = restaurantLookupService;
     this.createOrderSaga = createOrderSaga;
     this.cancelOrderSaga = cancelOrderSaga;
     this.reviseOrderSaga = reviseOrderSaga;
@@ -69,7 +72,7 @@ public class OrderService {
   @Transactional
   public Order createOrder(long consumerId, long restaurantId, DeliveryInformation deliveryInformation,
                            List<MenuItemIdAndQuantity> lineItems) {
-    Restaurant restaurant = findRestaurant(restaurantId)
+    Restaurant restaurant = restaurantLookupService.findRestaurant(restaurantId)
             .orElseThrow(() -> new RestaurantNotFoundException(restaurantId));
 
     List<OrderLineItem> orderLineItems = makeOrderLineItems(lineItems, restaurant);
@@ -173,11 +176,6 @@ public class OrderService {
 
   public void confirmRevision(long orderId, OrderRevision revision) {
     updateOrder(orderId, order -> order.confirmRevision(revision));
-  }
-
-  @Cacheable("restaurantsById")
-  public Optional<Restaurant> findRestaurant(long restaurantId) {
-    return restaurantRepository.findById(restaurantId);
   }
 
   public void createMenu(long id, String name, List<MenuItem> menuItems) {

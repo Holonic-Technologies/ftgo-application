@@ -15,6 +15,9 @@ import net.chrisrichardson.ftgo.orderservice.sagas.createorder.CreateOrderSaga;
 import net.chrisrichardson.ftgo.orderservice.sagas.reviseorder.ReviseOrderSaga;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -22,12 +25,24 @@ import org.springframework.context.annotation.Import;
 import java.util.Optional;
 
 @Configuration
+@EnableCaching
 @Import({TramEventsPublisherConfiguration.class, SagaOrchestratorConfiguration.class, CommonConfiguration.class})
 public class OrderServiceConfiguration {
 
   @Bean
+  public CacheManager cacheManager() {
+    return new ConcurrentMapCacheManager("restaurantsById");
+  }
+
+  @Bean
+  public RestaurantLookupService restaurantLookupService(RestaurantRepository restaurantRepository) {
+    return new RestaurantLookupService(restaurantRepository);
+  }
+
+  @Bean
   public OrderService orderService(SagaInstanceFactory sagaInstanceFactory,
                                    RestaurantRepository restaurantRepository,
+                                   RestaurantLookupService restaurantLookupService,
                                    OrderRepository orderRepository,
                                    DomainEventPublisher eventPublisher,
                                    CreateOrderSaga createOrderSaga,
@@ -37,7 +52,8 @@ public class OrderServiceConfiguration {
                                    Optional<MeterRegistry> meterRegistry) {
 
     return new OrderService(sagaInstanceFactory, orderRepository, eventPublisher, restaurantRepository,
-            createOrderSaga, cancelOrderSaga, reviseOrderSaga, orderAggregateEventPublisher, meterRegistry);
+            restaurantLookupService, createOrderSaga, cancelOrderSaga, reviseOrderSaga,
+            orderAggregateEventPublisher, meterRegistry);
   }
 
   @Bean
