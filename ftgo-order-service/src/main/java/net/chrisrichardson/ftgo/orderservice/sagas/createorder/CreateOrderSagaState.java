@@ -64,7 +64,7 @@ public class CreateOrderSagaState {
   }
 
   CreateTicket makeCreateTicketCommand() {
-    return new CreateTicket(getOrderDetails().getRestaurantId(), getOrderId(), makeTicketDetails(getOrderDetails()));
+    return new CreateTicket(getOrderDetails().getRestaurantId(), getOrderId() + 1, makeTicketDetails(getOrderDetails()));
   }
 
   private TicketDetails makeTicketDetails(OrderDetails orderDetails) {
