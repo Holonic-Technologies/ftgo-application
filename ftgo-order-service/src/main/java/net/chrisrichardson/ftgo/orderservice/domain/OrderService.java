@@ -16,6 +16,7 @@ import net.chrisrichardson.ftgo.orderservice.sagas.reviseorder.ReviseOrderSagaDa
 import net.chrisrichardson.ftgo.orderservice.web.MenuItemIdAndQuantity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,7 +69,7 @@ public class OrderService {
   @Transactional
   public Order createOrder(long consumerId, long restaurantId, DeliveryInformation deliveryInformation,
                            List<MenuItemIdAndQuantity> lineItems) {
-    Restaurant restaurant = restaurantRepository.findById(restaurantId)
+    Restaurant restaurant = findRestaurant(restaurantId)
             .orElseThrow(() -> new RestaurantNotFoundException(restaurantId));
 
     List<OrderLineItem> orderLineItems = makeOrderLineItems(lineItems, restaurant);
@@ -172,6 +173,11 @@ public class OrderService {
 
   public void confirmRevision(long orderId, OrderRevision revision) {
     updateOrder(orderId, order -> order.confirmRevision(revision));
+  }
+
+  @Cacheable("restaurantsById")
+  public Optional<Restaurant> findRestaurant(long restaurantId) {
+    return restaurantRepository.findById(restaurantId);
   }
 
   public void createMenu(long id, String name, List<MenuItem> menuItems) {
