@@ -12,13 +12,17 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
 
 public class CreateOrderSagaState {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
+
+  private static final Map<Long, Integer> ticketReplyCounts = new HashMap<>();
 
   private Long orderId;
 
@@ -83,6 +87,13 @@ public class CreateOrderSagaState {
   void handleCreateTicketReply(CreateTicketReply reply) {
     logger.debug("getTicketId {}", reply.getTicketId());
     setTicketId(reply.getTicketId());
+    Integer current = ticketReplyCounts.get(orderId);
+    ticketReplyCounts.put(orderId, (current == null ? 0 : current) + 1);
+  }
+
+  public static int getTicketReplyCount(long orderId) {
+    Integer count = ticketReplyCounts.get(orderId);
+    return count == null ? 0 : count;
   }
 
   CancelCreateTicket makeCancelCreateTicketCommand() {
