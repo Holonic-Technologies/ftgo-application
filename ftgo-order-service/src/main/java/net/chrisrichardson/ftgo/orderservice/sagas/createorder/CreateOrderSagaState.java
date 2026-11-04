@@ -18,6 +18,10 @@ import static java.util.stream.Collectors.toList;
 
 public class CreateOrderSagaState {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("CreateOrderSagaState");
+  }
+
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   private Long orderId;

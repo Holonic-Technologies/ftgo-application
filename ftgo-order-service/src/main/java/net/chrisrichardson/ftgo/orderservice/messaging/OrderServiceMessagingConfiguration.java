@@ -13,6 +13,10 @@ import org.springframework.context.annotation.Import;
 @Import({OrderServiceWithRepositoriesConfiguration.class, TramEventSubscriberConfiguration.class})
 public class OrderServiceMessagingConfiguration {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderServiceMessagingConfiguration");
+  }
+
   @Bean
   public OrderEventConsumer orderEventConsumer(OrderService orderService) {
     return new OrderEventConsumer(orderService);

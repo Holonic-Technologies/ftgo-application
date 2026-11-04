@@ -7,6 +7,10 @@ import net.chrisrichardson.ftgo.orderservice.api.events.OrderDomainEvent;
 
 public class OrderRevised implements OrderDomainEvent {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderRevised");
+  }
+
   private final OrderRevision orderRevision;
   private final Money currentOrderTotal;
   private final Money newOrderTotal;

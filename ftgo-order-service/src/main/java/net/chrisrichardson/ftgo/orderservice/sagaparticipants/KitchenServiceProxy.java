@@ -7,6 +7,10 @@ import net.chrisrichardson.ftgo.kitchenservice.api.*;
 
 public class KitchenServiceProxy {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("KitchenServiceProxy");
+  }
+
   public final CommandEndpoint<CreateTicket> create = CommandEndpointBuilder
           .forCommand(CreateTicket.class)
           .withChannel(KitchenServiceChannels.COMMAND_CHANNEL)

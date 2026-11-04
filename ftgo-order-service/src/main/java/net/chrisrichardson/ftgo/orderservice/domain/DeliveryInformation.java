@@ -17,6 +17,10 @@ import java.time.LocalDateTime;
 @Access(AccessType.FIELD)
 public class DeliveryInformation {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("DeliveryInformation");
+  }
+
   private LocalDateTime deliveryTime;
 
   @Embedded

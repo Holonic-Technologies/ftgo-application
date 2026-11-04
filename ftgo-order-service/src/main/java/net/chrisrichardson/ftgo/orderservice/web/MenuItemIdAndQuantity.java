@@ -6,6 +6,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 public class MenuItemIdAndQuantity {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("MenuItemIdAndQuantity");
+  }
+
   private String menuItemId;
   private int quantity;
 

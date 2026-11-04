@@ -27,6 +27,10 @@ import static java.util.stream.Collectors.toList;
 
 public class OrderService {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderService");
+  }
+
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   private SagaInstanceFactory sagaInstanceFactory;

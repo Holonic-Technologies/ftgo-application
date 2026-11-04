@@ -14,6 +14,10 @@ import java.util.Optional;
 @Embeddable
 public class OrderLineItems {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderLineItems");
+  }
+
   @ElementCollection
   @CollectionTable(name = "order_line_items")
   private List<OrderLineItem> lineItems;
@@ -57,8 +61,7 @@ public class OrderLineItems {
               .map(RevisedOrderLineItem::getQuantity)
               .findFirst();
 
-      li.setQuantity(revised.orElseThrow(() ->
-              new IllegalArgumentException(String.format("menu item id not found.", li.getMenuItemId()))));
+      revised.ifPresent(li::setQuantity);
     });
   }
 
