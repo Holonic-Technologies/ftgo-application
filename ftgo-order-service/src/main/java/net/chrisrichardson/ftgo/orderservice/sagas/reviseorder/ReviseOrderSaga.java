@@ -23,6 +23,10 @@ import static io.eventuate.tram.commands.consumer.CommandWithDestinationBuilder.
 
 public class ReviseOrderSaga implements SimpleSaga<ReviseOrderSagaData> {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("ReviseOrderSaga");
+  }
+
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   private SagaDefinition<ReviseOrderSagaData> sagaDefinition;

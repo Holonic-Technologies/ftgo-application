@@ -4,6 +4,10 @@ import net.chrisrichardson.ftgo.common.Money;
 
 public class CancelOrderSagaData  {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("CancelOrderSagaData");
+  }
+
   private Long orderId;
   private String reverseRequestId;
   private long restaurantId;

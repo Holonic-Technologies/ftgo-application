@@ -7,6 +7,10 @@ import java.util.Optional;
 
 public class OrderRevision {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderRevision");
+  }
+
   private Optional<DeliveryInformation> deliveryInformation = Optional.empty();
   private List<RevisedOrderLineItem> revisedOrderLineItems;
 

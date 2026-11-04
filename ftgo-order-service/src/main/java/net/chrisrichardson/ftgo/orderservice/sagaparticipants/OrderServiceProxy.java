@@ -7,6 +7,10 @@ import net.chrisrichardson.ftgo.orderservice.api.OrderServiceChannels;
 
 public class OrderServiceProxy {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderServiceProxy");
+  }
+
   public final CommandEndpoint<RejectOrderCommand> reject = CommandEndpointBuilder
           .forCommand(RejectOrderCommand.class)
           .withChannel(OrderServiceChannels.COMMAND_CHANNEL)

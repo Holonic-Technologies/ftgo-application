@@ -11,6 +11,10 @@ import org.springframework.context.annotation.*;
 @Import(OrderServiceWithRepositoriesConfiguration.class)
 public class OrderWebConfiguration {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderWebConfiguration");
+  }
+
   @Bean
   @Primary
   public ObjectMapper objectMapper() {

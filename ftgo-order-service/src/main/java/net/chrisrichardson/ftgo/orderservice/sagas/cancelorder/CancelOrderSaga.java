@@ -21,6 +21,10 @@ import static io.eventuate.tram.commands.consumer.CommandWithDestinationBuilder.
 
 public class CancelOrderSaga implements SimpleSaga<CancelOrderSagaData> {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("CancelOrderSaga");
+  }
+
 
 
   private SagaDefinition<CancelOrderSagaData> sagaDefinition;

@@ -9,6 +9,10 @@ import org.slf4j.LoggerFactory;
 
 public class CreateOrderSaga implements SimpleSaga<CreateOrderSagaState> {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("CreateOrderSaga");
+  }
+
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
