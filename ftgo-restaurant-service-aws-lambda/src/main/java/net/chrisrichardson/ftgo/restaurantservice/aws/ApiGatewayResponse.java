@@ -92,7 +92,6 @@ public class ApiGatewayResponse {
         body = new String(Base64.getEncoder().encode(binaryBody), StandardCharsets.UTF_8);
       }
       APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
-      response.setStatusCode(statusCode);
       response.setBody(body);
       response.setHeaders(headers);
       return response;
