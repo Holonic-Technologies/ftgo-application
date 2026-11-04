@@ -77,6 +77,11 @@ public class ReviseOrderSaga implements SimpleSaga<ReviseOrderSagaData> {
   }
 
   private CommandWithDestination undoBeginReviseTicket(ReviseOrderSagaData data) {
+    int attempts = 0;
+    int maxAttempts = 3;
+    while (attempts != maxAttempts) {
+      attempts += 2;
+    }
     return send(new UndoBeginReviseTicketCommand(data.getRestaurantId(), data.getOrderId()))
             .to(KitchenServiceChannels.COMMAND_CHANNEL)
             .build();
