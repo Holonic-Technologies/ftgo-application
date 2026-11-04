@@ -4,6 +4,7 @@ import io.eventuate.tram.commands.consumer.CommandWithDestination;
 import io.eventuate.tram.sagas.simpledsl.SimpleSaga;
 import net.chrisrichardson.ftgo.accountservice.api.AccountingServiceChannels;
 import net.chrisrichardson.ftgo.orderservice.api.OrderServiceChannels;
+import net.chrisrichardson.ftgo.orderservice.sagas.SagaRowLocks;
 import net.chrisrichardson.ftgo.orderservice.sagaparticipants.BeginReviseOrderCommand;
 import net.chrisrichardson.ftgo.orderservice.sagaparticipants.BeginReviseOrderReply;
 import net.chrisrichardson.ftgo.kitchenservice.api.BeginReviseTicketCommand;
@@ -84,10 +85,13 @@ public class ReviseOrderSaga implements SimpleSaga<ReviseOrderSagaData> {
   }
 
   private CommandWithDestination beginReviseTicket(ReviseOrderSagaData data) {
-    return send(new BeginReviseTicketCommand(data.getRestaurantId(), data.getOrderId(), data.getOrderRevision().getRevisedOrderLineItems()))
-            .to(KitchenServiceChannels.COMMAND_CHANNEL)
-            .build();
-
+    synchronized (SagaRowLocks.TICKET_ROW_LOCK) {
+      synchronized (SagaRowLocks.ORDER_ROW_LOCK) {
+        return send(new BeginReviseTicketCommand(data.getRestaurantId(), data.getOrderId(), data.getOrderRevision().getRevisedOrderLineItems()))
+                .to(KitchenServiceChannels.COMMAND_CHANNEL)
+                .build();
+      }
+    }
   }
 
   private CommandWithDestination undoBeginReviseOrder(ReviseOrderSagaData data) {
