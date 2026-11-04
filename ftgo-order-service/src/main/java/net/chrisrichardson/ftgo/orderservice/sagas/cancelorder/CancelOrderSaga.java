@@ -1,5 +1,6 @@
 package net.chrisrichardson.ftgo.orderservice.sagas.cancelorder;
 
+import io.eventuate.tram.commands.common.Success;
 import io.eventuate.tram.commands.consumer.CommandWithDestination;
 import io.eventuate.tram.sagas.orchestration.SagaDefinition;
 import io.eventuate.tram.sagas.simpledsl.SimpleSaga;
@@ -38,6 +39,7 @@ public class CancelOrderSaga implements SimpleSaga<CancelOrderSagaData> {
             .invokeParticipant(this::reverseAuthorization)
             .step()
             .invokeParticipant(this::confirmTicketCancel)
+            .onReply(Success.class, this::handleConfirmTicketCancelReply)
             .step()
             .invokeParticipant(this::confirmOrderCancel)
             .build();
@@ -56,6 +58,10 @@ public class CancelOrderSaga implements SimpleSaga<CancelOrderSagaData> {
             .to(KitchenServiceChannels.COMMAND_CHANNEL)
             .build();
 
+  }
+
+  private void handleConfirmTicketCancelReply(CancelOrderSagaData data, Success reply) {
+    data.noteTicketCancelConfirmed();
   }
 
   private CommandWithDestination reverseAuthorization(CancelOrderSagaData data) {
