@@ -9,6 +9,7 @@ public class CancelOrderSagaData  {
   private long restaurantId;
   private long consumerId;
   private Money orderTotal;
+  private boolean expedited;
 
   private CancelOrderSagaData() {
   }
@@ -17,6 +18,15 @@ public class CancelOrderSagaData  {
     this.consumerId = consumerId;
     this.orderId = orderId;
     this.orderTotal = orderTotal;
+  }
+
+  public CancelOrderSagaData(long consumerId, long orderId, Money orderTotal, boolean expedited) {
+    this(consumerId, orderId, orderTotal);
+    this.expedited = expedited;
+  }
+
+  public boolean isExpedited() {
+    return expedited;
   }
 
   public Long getOrderId() {
