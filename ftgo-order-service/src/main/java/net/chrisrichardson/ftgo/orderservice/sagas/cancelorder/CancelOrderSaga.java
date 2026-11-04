@@ -16,10 +16,13 @@ import net.chrisrichardson.ftgo.kitchenservice.api.UndoBeginCancelTicketCommand;
 import org.springframework.util.Assert;
 
 import javax.annotation.PostConstruct;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.eventuate.tram.commands.consumer.CommandWithDestinationBuilder.send;
 
 public class CancelOrderSaga implements SimpleSaga<CancelOrderSagaData> {
+
+  private static final AtomicInteger started = new AtomicInteger();
 
 
 
@@ -86,6 +89,7 @@ public class CancelOrderSaga implements SimpleSaga<CancelOrderSagaData> {
   }
 
   private CommandWithDestination beginCancel(CancelOrderSagaData data) {
+    started.get();
     return send(new BeginCancelCommand(data.getOrderId()))
             .to(OrderServiceChannels.COMMAND_CHANNEL)
             .build();
