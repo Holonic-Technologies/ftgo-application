@@ -21,6 +21,10 @@ import static java.util.Collections.singletonList;
 @Access(AccessType.FIELD)
 public class Order {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("Order");
+  }
+
   public static ResultWithDomainEvents<Order, OrderDomainEvent>
   createOrder(long consumerId, Restaurant restaurant, DeliveryInformation deliveryInformation, List<OrderLineItem> orderLineItems) {
     Order order = new Order(consumerId, restaurant.getId(), deliveryInformation, orderLineItems);

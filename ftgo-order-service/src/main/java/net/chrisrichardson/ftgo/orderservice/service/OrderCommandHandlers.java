@@ -21,6 +21,10 @@ import static io.eventuate.tram.commands.consumer.CommandHandlerReplyBuilder.wit
 
 public class OrderCommandHandlers {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderCommandHandlers");
+  }
+
   @Autowired
   private OrderService orderService;
 

@@ -4,6 +4,10 @@ import net.chrisrichardson.ftgo.orderservice.domain.OrderRevision;
 
 public class BeginReviseOrderCommand extends OrderCommand {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("BeginReviseOrderCommand");
+  }
+
   private BeginReviseOrderCommand() {
   }
 

@@ -6,6 +6,10 @@ import net.chrisrichardson.ftgo.orderservice.api.events.OrderDomainEvent;
 
 public class OrderDomainEventPublisher extends AbstractAggregateDomainEventPublisher<Order, OrderDomainEvent> {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderDomainEventPublisher");
+  }
+
 
   public OrderDomainEventPublisher(DomainEventPublisher eventPublisher) {
     super(eventPublisher, Order.class, Order::getId);

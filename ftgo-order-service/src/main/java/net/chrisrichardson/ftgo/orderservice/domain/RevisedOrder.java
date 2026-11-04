@@ -1,6 +1,10 @@
 package net.chrisrichardson.ftgo.orderservice.domain;
 
 public class RevisedOrder {
+
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("RevisedOrder");
+  }
   private final Order order;
   private final LineItemQuantityChange change;
 

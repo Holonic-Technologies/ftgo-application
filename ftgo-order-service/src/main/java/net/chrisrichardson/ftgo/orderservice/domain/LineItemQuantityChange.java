@@ -3,6 +3,10 @@ package net.chrisrichardson.ftgo.orderservice.domain;
 import net.chrisrichardson.ftgo.common.Money;
 
 public class LineItemQuantityChange {
+
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("LineItemQuantityChange");
+  }
   final Money currentOrderTotal;
   final Money newOrderTotal;
   final Money delta;

@@ -22,6 +22,10 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 
 public class OrderServiceServer {
+
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderServiceServer");
+  }
   private static final Logger logger = LoggerFactory.getLogger(OrderServiceServer.class);
 
   private int port = 50051;

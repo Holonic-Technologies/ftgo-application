@@ -11,5 +11,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @Import({OrderServiceConfiguration.class})
 public class OrderServiceWithRepositoriesConfiguration {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderServiceWithRepositoriesConfiguration");
+  }
+
 
 }
