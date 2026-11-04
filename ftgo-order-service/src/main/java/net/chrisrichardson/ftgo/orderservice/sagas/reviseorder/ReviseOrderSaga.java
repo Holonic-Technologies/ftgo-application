@@ -4,6 +4,7 @@ import io.eventuate.tram.commands.consumer.CommandWithDestination;
 import io.eventuate.tram.sagas.simpledsl.SimpleSaga;
 import net.chrisrichardson.ftgo.accountservice.api.AccountingServiceChannels;
 import net.chrisrichardson.ftgo.orderservice.api.OrderServiceChannels;
+import net.chrisrichardson.ftgo.orderservice.sagas.SagaMetrics;
 import net.chrisrichardson.ftgo.orderservice.sagaparticipants.BeginReviseOrderCommand;
 import net.chrisrichardson.ftgo.orderservice.sagaparticipants.BeginReviseOrderReply;
 import net.chrisrichardson.ftgo.kitchenservice.api.BeginReviseTicketCommand;
@@ -97,6 +98,7 @@ public class ReviseOrderSaga implements SimpleSaga<ReviseOrderSagaData> {
   }
 
   private CommandWithDestination beginReviseOrder(ReviseOrderSagaData data) {
+    SagaMetrics.noteSagaStarted();
     return send(new BeginReviseOrderCommand(data.getOrderId(), data.getOrderRevision()))
             .to(OrderServiceChannels.COMMAND_CHANNEL)
             .build();

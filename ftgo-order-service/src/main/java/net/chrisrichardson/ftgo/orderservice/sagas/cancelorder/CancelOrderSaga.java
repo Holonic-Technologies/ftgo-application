@@ -6,6 +6,7 @@ import io.eventuate.tram.sagas.simpledsl.SimpleSaga;
 import net.chrisrichardson.ftgo.accountservice.api.AccountingServiceChannels;
 import net.chrisrichardson.ftgo.accountservice.api.ReverseAuthorizationCommand;
 import net.chrisrichardson.ftgo.orderservice.api.OrderServiceChannels;
+import net.chrisrichardson.ftgo.orderservice.sagas.SagaMetrics;
 import net.chrisrichardson.ftgo.orderservice.sagaparticipants.BeginCancelCommand;
 import net.chrisrichardson.ftgo.orderservice.sagaparticipants.ConfirmCancelOrderCommand;
 import net.chrisrichardson.ftgo.orderservice.sagaparticipants.UndoBeginCancelCommand;
@@ -86,6 +87,7 @@ public class CancelOrderSaga implements SimpleSaga<CancelOrderSagaData> {
   }
 
   private CommandWithDestination beginCancel(CancelOrderSagaData data) {
+    SagaMetrics.noteSagaStarted();
     return send(new BeginCancelCommand(data.getOrderId()))
             .to(OrderServiceChannels.COMMAND_CHANNEL)
             .build();
