@@ -80,6 +80,9 @@ public class CancelOrderSaga implements SimpleSaga<CancelOrderSagaData> {
   }
 
   private CommandWithDestination undoBeginCancel(CancelOrderSagaData data) {
+    if (data.isExpedited()) {
+      return null;
+    }
     return send(new UndoBeginCancelCommand(data.getOrderId()))
             .to(OrderServiceChannels.COMMAND_CHANNEL)
             .build();
