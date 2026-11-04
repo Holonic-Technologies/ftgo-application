@@ -73,8 +73,7 @@ public class OrderHistoryDaoDynamoDb implements OrderHistoryDao {
             .withPrimaryKey("orderId", order.getOrderId())
             .withUpdateExpression("SET orderStatus = :orderStatus, " +
                     "creationDate = :creationDate, consumerId = :consumerId, lineItems =" +
-                    " :lineItems, keywords = :keywords, restaurantId = :restaurantId, " +
-                    " restaurantName = :restaurantName"
+                    " :lineItems, keywords = :keywords, restaurantId = :restaurantId"
             )
             .withValueMap(new Maps()
                     .add(":orderStatus", order.getStatus().toString())
@@ -83,7 +82,6 @@ public class OrderHistoryDaoDynamoDb implements OrderHistoryDao {
                     .add(":lineItems", mapLineItems(order.getLineItems()))
                     .add(":keywords", mapKeywords(order))
                     .add(":restaurantId", order.getRestaurantId())
-                    .add(":restaurantName", order.getRestaurantName())
                     .map())
             .withReturnValues(ReturnValue.NONE);
     return idempotentUpdate(spec, eventSource);
