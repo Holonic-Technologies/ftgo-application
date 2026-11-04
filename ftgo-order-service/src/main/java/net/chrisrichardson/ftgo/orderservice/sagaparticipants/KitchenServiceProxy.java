@@ -5,7 +5,16 @@ import io.eventuate.tram.sagas.simpledsl.CommandEndpoint;
 import io.eventuate.tram.sagas.simpledsl.CommandEndpointBuilder;
 import net.chrisrichardson.ftgo.kitchenservice.api.*;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class KitchenServiceProxy {
+
+  private final Map<Long, CreateTicketReply> recentTicketReplies = new ConcurrentHashMap<>();
+
+  public void recordTicketReply(long orderId, CreateTicketReply reply) {
+    recentTicketReplies.put(orderId, reply);
+  }
 
   public final CommandEndpoint<CreateTicket> create = CommandEndpointBuilder
           .forCommand(CreateTicket.class)
