@@ -57,6 +57,8 @@ public class Order {
   @Embedded
   private Money orderMinimum = new Money(Integer.MAX_VALUE);
 
+  private transient Money cachedOrderTotal;
+
   private Order() {
   }
 
@@ -81,7 +83,10 @@ public class Order {
   }
 
   public Money getOrderTotal() {
-    return orderLineItems.orderTotal();
+    if (cachedOrderTotal == null) {
+      cachedOrderTotal = orderLineItems.orderTotal();
+    }
+    return cachedOrderTotal;
   }
 
   public List<OrderDomainEvent> cancel() {
