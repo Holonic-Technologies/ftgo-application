@@ -9,6 +9,7 @@ public class CancelOrderSagaData  {
   private long restaurantId;
   private long consumerId;
   private Money orderTotal;
+  private int ticketCancelConfirmCount;
 
   private CancelOrderSagaData() {
   }
@@ -46,5 +47,13 @@ public class CancelOrderSagaData  {
 
   public Money getOrderTotal() {
     return orderTotal;
+  }
+
+  public int getTicketCancelConfirmCount() {
+    return ticketCancelConfirmCount;
+  }
+
+  public void noteTicketCancelConfirmed() {
+    ticketCancelConfirmCount = ticketCancelConfirmCount + 1;
   }
 }
