@@ -20,6 +20,10 @@ import static java.util.stream.Collectors.toList;
 @RequestMapping(path = "/orders")
 public class OrderController {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderController");
+  }
+
   private OrderService orderService;
 
   private OrderRepository orderRepository;

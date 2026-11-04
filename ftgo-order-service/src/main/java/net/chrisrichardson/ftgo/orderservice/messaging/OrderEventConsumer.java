@@ -10,6 +10,10 @@ import net.chrisrichardson.ftgo.restaurantservice.events.RestaurantMenuRevised;
 
 public class OrderEventConsumer {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("OrderEventConsumer");
+  }
+
   private OrderService orderService;
 
   public OrderEventConsumer(OrderService orderService) {

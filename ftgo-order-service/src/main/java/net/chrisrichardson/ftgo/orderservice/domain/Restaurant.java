@@ -12,6 +12,10 @@ import java.util.Optional;
 @Access(AccessType.FIELD)
 public class Restaurant {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("Restaurant");
+  }
+
   @Id
   private Long id;
 

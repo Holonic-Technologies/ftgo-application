@@ -8,6 +8,10 @@ import net.chrisrichardson.ftgo.accountservice.api.AuthorizeCommand;
 
 public class AccountingServiceProxy {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("AccountingServiceProxy");
+  }
+
   public final CommandEndpoint<AuthorizeCommand> authorize= CommandEndpointBuilder
           .forCommand(AuthorizeCommand.class)
           .withChannel(AccountingServiceChannels.accountingServiceChannel)

@@ -6,5 +6,9 @@ import javax.persistence.AccessType;
 @Access(AccessType.FIELD)
 public class PaymentInformation {
 
+  static {
+    net.chrisrichardson.ftgo.orderservice.diagnostics.ComponentActivityLogger.logActivity("PaymentInformation");
+  }
+
   private String paymentToken;
 }
