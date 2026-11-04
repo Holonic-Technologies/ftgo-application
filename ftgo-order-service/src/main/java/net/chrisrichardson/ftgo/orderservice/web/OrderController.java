@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
@@ -52,9 +53,10 @@ public class OrderController {
   }
 
   @RequestMapping(path = "/{orderId}/cancel", method = RequestMethod.POST)
-  public ResponseEntity<GetOrderResponse> cancel(@PathVariable long orderId) {
+  public ResponseEntity<GetOrderResponse> cancel(@PathVariable long orderId,
+                                                  @RequestParam(required = false, defaultValue = "false") boolean expedited) {
     try {
-      Order order = orderService.cancel(orderId);
+      Order order = orderService.cancel(orderId, expedited);
       return new ResponseEntity<>(makeGetOrderResponse(order), HttpStatus.OK);
     } catch (OrderNotFoundException e) {
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
