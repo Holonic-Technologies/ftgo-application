@@ -24,6 +24,7 @@ public class CreateOrderSagaState {
 
   private OrderDetails orderDetails;
   private long ticketId;
+  private int ticketReplyCount;
 
   public Long getOrderId() {
     return orderId;
@@ -83,6 +84,11 @@ public class CreateOrderSagaState {
   void handleCreateTicketReply(CreateTicketReply reply) {
     logger.debug("getTicketId {}", reply.getTicketId());
     setTicketId(reply.getTicketId());
+    ticketReplyCount = ticketReplyCount + 1;
+  }
+
+  public int getTicketReplyCount() {
+    return ticketReplyCount;
   }
 
   CancelCreateTicket makeCancelCreateTicketCommand() {
