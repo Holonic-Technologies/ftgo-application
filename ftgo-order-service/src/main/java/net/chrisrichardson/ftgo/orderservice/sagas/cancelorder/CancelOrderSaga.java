@@ -12,7 +12,6 @@ import net.chrisrichardson.ftgo.orderservice.sagaparticipants.UndoBeginCancelCom
 import net.chrisrichardson.ftgo.kitchenservice.api.BeginCancelTicketCommand;
 import net.chrisrichardson.ftgo.kitchenservice.api.ConfirmCancelTicketCommand;
 import net.chrisrichardson.ftgo.kitchenservice.api.KitchenServiceChannels;
-import net.chrisrichardson.ftgo.kitchenservice.api.UndoBeginCancelTicketCommand;
 import org.springframework.util.Assert;
 
 import javax.annotation.PostConstruct;
@@ -33,7 +32,6 @@ public class CancelOrderSaga implements SimpleSaga<CancelOrderSagaData> {
             .withCompensation(this::undoBeginCancel)
             .step()
             .invokeParticipant(this::beginCancelTicket)
-            .withCompensation(this::undoBeginCancelTicket)
             .step()
             .invokeParticipant(this::reverseAuthorization)
             .step()
@@ -61,13 +59,6 @@ public class CancelOrderSaga implements SimpleSaga<CancelOrderSagaData> {
   private CommandWithDestination reverseAuthorization(CancelOrderSagaData data) {
     return send(new ReverseAuthorizationCommand(data.getConsumerId(), data.getOrderId(), data.getOrderTotal()))
             .to(AccountingServiceChannels.accountingServiceChannel)
-            .build();
-
-  }
-
-  private CommandWithDestination undoBeginCancelTicket(CancelOrderSagaData data) {
-    return send(new UndoBeginCancelTicketCommand(data.getRestaurantId(), data.getOrderId()))
-            .to(KitchenServiceChannels.COMMAND_CHANNEL)
             .build();
 
   }
