@@ -394,13 +394,17 @@ jobs:
               export CODEINTENT_COMMENT_ID="$comment_id"
               python3 <<'PY' > /tmp/codeintent-comment.md
           """One compact GitHub comment over native results and separate acceptance policy."""
+          import base64
+          import json
           import os
+          import re
           from html import escape
-          from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+          from urllib.parse import urlsplit, urlunsplit, parse_qsl, quote, unquote, urlencode
           
           MARKER = '<!-- codeintent-checks -->'
           ICONS = {'passed':'✅','failed':'❌','error':'⚠️','stopped':'➖','blocked':'➖','pending':'⏳','running':'⏳'}
-          DEFAULT_FTGO_REPOSITORIES = ('scottswindell-hub/ftgo-application',
+          DEFAULT_FTGO_REPOSITORIES = ('pv-pterab-s/ftgo-application',
+                                       'scottswindell-hub/ftgo-application',
                                        'Holonic-Technologies/ftgo-application')
           
           
@@ -486,7 +490,168 @@ jobs:
                       and 'required evidence gap(s)' in check.get('detail', ''))
           
           
-          def render_run_comment(document, report_url):
+          VERSIONS_SCHEMA = 'codeintent-versions-v1'
+          MESSAGE_LIMIT = 65536   # GitHub's comment size: the versions span must never push a message past it
+          TITLE_LIMIT = 32767     # GitHub drops a longer title attribute when it renders the message
+          # The chain is an empty <span> whose title holds one readable line per component (review_service/VERSIONS.md).
+          VERSIONS_HEAD = '__VERSION ' + VERSIONS_SCHEMA
+          VERSIONS_SPAN = re.compile(r'<span title="' + VERSIONS_HEAD + r'(?P<lines>(?:\r?\n[^"<>&]*)?)"></span>')
+          VERSIONS_SPAN_BLOCK = re.compile(VERSIONS_SPAN.pattern + r'[ \t]*(?:\r?\n)?')
+          # Characters left readable in a value: none of them is special inside a double-quoted HTML attribute or in a
+          # line's grammar. Everything else (%, comma, =, parentheses, brackets, quotes, <, >, &, backslash, control
+          # characters, non-ASCII) is percent-encoded, as is a leading or trailing space and a name's first character
+          # unless it is an ASCII letter (so no line can start a Markdown block).
+          VERSIONS_SAFE = " /:@+~._-'*!$;?#{}|`"   # no "^": a line starting "[^" would be a footnote definition
+          VERSIONS_LINE = re.compile(r'(?P<name>[^\[]*?) ?\[(?P<id>[^\]]*)\]:(?: (?P<version>[^(]*?))?(?: \((?P<detail>[^()]*)\))?')
+          # The earlier format: a collapsed "Produced by" table and a hidden base64url JSON comment. It is still read, and
+          # removed whenever a message is updated.
+          OLD_VERSIONS_MARKER = re.compile(r'<!-- codeintent-versions:v1 ([A-Za-z0-9_-]*) -->')
+          OLD_VERSIONS_BLOCK = re.compile(r'<details>\r?\n<summary>Produced by</summary>\r?\n.*?\r?\n</details>\r?\n?'
+                                          r'(?:' + OLD_VERSIONS_MARKER.pattern + r'[ \t]*(?:\r?\n)?)?|'
+                                          + OLD_VERSIONS_MARKER.pattern + r'[ \t]*(?:\r?\n)?', re.S)
+          
+          
+          def versions_chain(record=None, components=None):
+              """The stored record's components, then the ones added when the message is rendered (VERSIONS.md)."""
+              stored=record.get('components') if isinstance(record,dict) else None
+              entries=[c for c in [*(stored or []), *(components or [])] if isinstance(c,dict)]
+              return {'schema':VERSIONS_SCHEMA,'components':entries} if entries else None
+          
+          
+          def versions_quote(value, first=False):
+              """Percent-encode one value so the line round-trips through unquote and stays inert in the attribute."""
+              text=quote('' if value is None else str(value), safe=VERSIONS_SAFE)
+              if text[:1]==' ' or (first and text[:1] and text[0]!='%' and not ('a'<=text[0].lower()<='z')):
+                  text='%{:02X}'.format(ord(text[0]))+text[1:]
+              if text[-1:]==' ':
+                  text=text[:-1]+'%20'
+              return text
+          
+          
+          def versions_line(component, detail=True):
+              """`<name> [<id>]: <version>`, then ` (k=v, ...)` when the component has detail."""
+              line=(versions_quote(component.get('name'), first=True)+' ['+versions_quote(component.get('id'))+']: '
+                    +versions_quote(component.get('version')))
+              pairs=component.get('detail') if detail and isinstance(component.get('detail'),dict) else {}
+              if pairs:
+                  line+=' ('+', '.join(versions_quote(k)+'='+versions_quote(v) for k,v in pairs.items())+')'
+              return line
+          
+          
+          def versioned(component):
+              """A component whose version is a full commit SHA or "unrecorded"; anything else (an earlier vNNN number) is
+              shown as unrecorded, with the old value kept in its detail."""
+              version=component.get('version')
+              if isinstance(version,str) and (version=='unrecorded' or re.fullmatch(r'[0-9a-f]{40}',version)):
+                  return component
+              detail=dict(component.get('detail') or {})
+              if version not in (None,''):
+                  detail['legacy_version']=version
+              return {**component,'version':'unrecorded','detail':detail}
+          
+          
+          def versions_marker(chain, detail=True):
+              """The versions span: empty, so nothing shows on the page; its title carries the chain, one line per component."""
+              entries=[c for c in (chain or {}).get('components') or [] if isinstance(c,dict)]
+              return '<span title="'+'\n'.join([VERSIONS_HEAD,*(versions_line(c,detail) for c in entries),''])+'"></span>'
+          
+          
+          def parse_versions_span(text):
+              """The chain from a span's lines; every component comes back with a `detail` dict (empty when none was shown)."""
+              components=[]
+              for line in re.split(r'\r?\n',text):
+                  if not line.strip():
+                      continue
+                  match=VERSIONS_LINE.fullmatch(line.strip())
+                  if not match:
+                      return None
+                  detail={}
+                  for pair in match['detail'].split(',') if match['detail'] is not None else []:
+                      key,equals,value=pair[1:].partition('=') if pair.startswith(' ') else pair.partition('=')
+                      if not equals:
+                          return None
+                      detail[unquote(key)]=unquote(value)
+                  components.append({'id':unquote(match['id']),'name':unquote(match['name']),
+                                     'version':unquote(match['version'] or ''),'detail':detail})
+              return {'schema':VERSIONS_SCHEMA,'components':components}
+          
+          
+          def parse_versions_marker(body):
+              """The chain from the message's versions span, or from the earlier hidden marker when there is no span."""
+              match=VERSIONS_SPAN.search(body or '')
+              if match:
+                  return parse_versions_span(match['lines'])
+              match=OLD_VERSIONS_MARKER.search(body or '')
+              if not match:
+                  return None
+              try:
+                  data=match.group(1)
+                  chain=json.loads(base64.urlsafe_b64decode(data+'='*(-len(data)%4)).decode('utf-8'))
+              except ValueError:
+                  return None
+              return chain if isinstance(chain,dict) and isinstance(chain.get('components'),list) else None
+          
+          
+          def versions_lines(chain, room=None):
+              """The versions span as the message's last block; nothing without a chain.
+          
+              With `room` (characters left in the message), a span that does not fit drops each component's detail, and is
+              left out when even that does not fit.
+              """
+              entries=[versioned(c) for c in (chain or {}).get('components') or [] if isinstance(c,dict)]
+              if not entries:
+                  return []
+              def fits(span):
+                  title=len(span)-len('<span title="')-len('"></span>')
+                  return title<=TITLE_LIMIT and (room is None or len(span)<room)
+              span=versions_marker({**chain, 'components': entries})
+              if fits(span):
+                  return [span]
+              span=versions_marker({**chain, 'components': entries}, detail=False)
+              return [span] if fits(span) else []
+          
+          
+          def remove_versions_blocks(body):
+              """The message without any versions span, "Produced by" table or earlier hidden marker."""
+              return OLD_VERSIONS_BLOCK.sub('',VERSIONS_SPAN_BLOCK.sub('',body or ''))
+          
+          
+          def replace_versions_block(body, chain):
+              """Swap the message's versions for this chain, or append them; exactly one span remains, last."""
+              rest=remove_versions_blocks(body)
+              block='\n'.join(versions_lines(chain, MESSAGE_LIMIT-len(rest)-3))
+              if not block:
+                  return rest
+              return rest+('' if not rest or rest.endswith('\n\n') else '\n' if rest.endswith('\n') else '\n\n')+block+'\n'
+          
+          
+          def placeholder_versions(components):
+              """The versions span for a message posted before the analysis has recorded its versions."""
+              lines=versions_lines(versions_chain(None,components))
+              return '\n'.join(lines)+'\n' if lines else ''
+          
+          
+          def ungoverned_notice(checks):
+              """Report explicit absent bindings, never infer coverage from a failed judgment."""
+              boundaries=[]
+              for check in checks:
+                  if check.get('id')!='intent_diff' or check.get('state') not in {'passed','failed'}:
+                      continue
+                  for judgment in check.get('judgments') or []:
+                      boundary=judgment.get('boundary_id')
+                      if (judgment.get('unlinked') is True and isinstance(boundary,str) and boundary.strip()
+                              and not judgment.get('workflow_obligations') and not judgment.get('intent_region_ids')
+                              and boundary not in boundaries):
+                          boundaries.append(boundary)
+              if not boundaries:
+                  return []
+              return ['', '**Outside governed coverage**',
+                      'These changes are not governed by CodeIntent objectives or constraints. Coding standards are evaluated separately.',
+                      '', 'Affected areas:',
+                      *['- <code>'+escape(boundary)+'</code>' for boundary in boundaries[:10]],
+                      *([f'- …and {len(boundaries)-10} more changed areas.'] if len(boundaries)>10 else []), '']
+          
+          def render_run_comment(document, report_url, components=None):
               if urlsplit(report_url).scheme not in {'http','https'}:
                   raise ValueError('Report URL must be HTTP(S)')
               comment_id=str(document.get('github_comment_id') or '')
@@ -506,11 +671,7 @@ jobs:
               failures=[c for c in visible if c.get('state') in {'failed','error'}]
               all_reviewed=bool(failures) and all(reviewed(c) for c in failures)
               needs_review=((verdict!='PASS' and not all_reviewed and not hidden) or any(not reviewed(c) for c in failures) or any(review_pending(c) for c in visible)
-                            or (verdict!='PASS' and not shadow
-                                and status in {'blocked','review_required','incomplete','evidence_needed'}))
-              if document.get('skipped_for_size'):
-                  note=inline(document.get('size_review_note') or 'This change is beyond automated review. Break it into smaller, independently reviewable PRs, or ask an owner to review it directly.')
-                  return '\n'.join([MARKER,'### CodeIntent checks -- ➖ Beyond automated review','',note,''])+'\n'
+                            or (not shadow and status in {'blocked','review_required','incomplete','evidence_needed'}))
               label=('⏳ Running' if document.get('state')!='completed' else
                      '⚠️ LACKS_DETERMINISTIC_EVIDENCE' if needs_review and verdict=='UNKNOWN' else
                      '❌ Needs Review' if needs_review else '✅ Reviewed' if all_reviewed else 'Review results' if hidden else '✅ Passed')
@@ -539,7 +700,8 @@ jobs:
               for check in checks:
                   notice=check.get('reviewability') or {}
                   if notice and notice.get('band')!='normal':
-                      rows += [f"🟡 **Review scope:** {inline(notice.get('message'))}", '']
+                      rows += [f"🟡 **PR reviewability:** {inline(notice.get('message'))}",
+                               f"Counted size: {inline(notice.get('analysis_lines'))} lines across {inline(notice.get('changed_files'))} files; {inline(notice.get('mode'))} policy.", '']
                   if check.get('id')=='governance_decision':
                       continue
                   state=check.get('state','pending')
@@ -580,9 +742,20 @@ jobs:
               if failed:
                   rows+=['<details open>', '<summary>❌ Needs Review</summary>', '',
                          *failed, '', '</details>', '']
+              rows+=ungoverned_notice(checks)
               risks=(acceptance.get('intent_risks') or {}).get('assessments',[])
               if risks:
                   rows+=['',f"🟡 Intent outside governed objectives: {len(risks)} change(s); {len(acceptance.get('required_reviews',[]))} awaiting risk review."]
+              chain=versions_chain(document.get('codeintent_versions'),components)
+              versions=versions_lines(chain, MESSAGE_LIMIT-len('\n'.join(rows))-3)
+              if chain and not versions:
+                  # Only a message near GitHub's limit gets here: shorten the finding links' long tooltips (the full text is on
+                  # the report) so the commit SHAs still fit.
+                  rows=[re.sub(r' title="([^"]{300})[^"]+"', lambda m: ' title="'+m.group(1).rsplit(' ',1)[0]+' …"', row)
+                        for row in rows]
+                  versions=versions_lines(chain, MESSAGE_LIMIT-len('\n'.join(rows))-3)
+              if versions:
+                  rows+=([''] if rows[-1] else [])+versions
               return '\n'.join(rows)+'\n'
 
           import json, os
