@@ -57,8 +57,7 @@ public class OrderLineItems {
               .map(RevisedOrderLineItem::getQuantity)
               .findFirst();
 
-      li.setQuantity(revised.orElseThrow(() ->
-              new IllegalArgumentException(String.format("menu item id not found.", li.getMenuItemId()))));
+      revised.ifPresent(li::setQuantity);
     });
   }
 
