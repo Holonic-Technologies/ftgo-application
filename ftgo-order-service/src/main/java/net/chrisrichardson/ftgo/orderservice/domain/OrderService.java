@@ -33,7 +33,7 @@ public class OrderService {
 
   private OrderRepository orderRepository;
 
-  private RestaurantRepository restaurantRepository;
+  private volatile RestaurantRepository restaurantRepository;
 
   private CreateOrderSaga createOrderSaga;
 
