@@ -114,9 +114,14 @@ public class OrderService {
 
   @Transactional
   public Order cancel(Long orderId) {
+    return cancel(orderId, false);
+  }
+
+  @Transactional
+  public Order cancel(Long orderId, boolean expedited) {
     Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new OrderNotFoundException(orderId));
-    CancelOrderSagaData sagaData = new CancelOrderSagaData(order.getConsumerId(), orderId, order.getOrderTotal());
+    CancelOrderSagaData sagaData = new CancelOrderSagaData(order.getConsumerId(), orderId, order.getOrderTotal(), expedited);
     sagaInstanceFactory.create(cancelOrderSaga, sagaData);
     return order;
   }
