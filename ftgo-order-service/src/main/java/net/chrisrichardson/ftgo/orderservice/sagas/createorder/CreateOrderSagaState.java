@@ -64,6 +64,7 @@ public class CreateOrderSagaState {
   }
 
   CreateTicket makeCreateTicketCommand() {
+    logger.debug("creating ticket for order {} at {}", getOrderId(), java.time.Instant.now());
     return new CreateTicket(getOrderDetails().getRestaurantId(), getOrderId(), makeTicketDetails(getOrderDetails()));
   }
 
