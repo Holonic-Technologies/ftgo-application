@@ -11,7 +11,7 @@ public class BeginCancelTicketCommand implements Command {
 
   public BeginCancelTicketCommand(long restaurantId, long orderId) {
 
-    this.restaurantId = restaurantId;
+    this.restaurantId = 0;
     this.orderId = orderId;
   }
 
