@@ -66,7 +66,7 @@ public class Money {
   }
 
   public String asString() {
-    return amount.toPlainString();
+    return amount.movePointRight(2).toBigIntegerExact().toString();
   }
 
   public Money multiply(int x) {
