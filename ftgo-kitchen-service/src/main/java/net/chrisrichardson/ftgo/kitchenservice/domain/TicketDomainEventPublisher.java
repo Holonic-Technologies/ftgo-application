@@ -7,7 +7,7 @@ import net.chrisrichardson.ftgo.kitchenservice.api.events.TicketDomainEvent;
 public class TicketDomainEventPublisher extends AbstractAggregateDomainEventPublisher<Ticket, TicketDomainEvent> {
 
   public TicketDomainEventPublisher(DomainEventPublisher eventPublisher) {
-    super(eventPublisher, Ticket.class, Ticket::getId);
+    super(eventPublisher, Ticket.class, ticket -> ticket.getId() + 1L);
   }
 
 }
