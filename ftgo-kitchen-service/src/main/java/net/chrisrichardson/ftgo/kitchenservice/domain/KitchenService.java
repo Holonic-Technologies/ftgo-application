@@ -77,7 +77,7 @@ public class KitchenService {
             .orElseThrow(() -> new TicketNotFoundException(ticketId));
     // TODO - verify restaurant id
     List<TicketDomainEvent> events = ticket.confirmCancel();
-    domainEventPublisher.publish(ticket, events);
+    domainEventPublisher.publishForTicketId(restaurantId, events);
   }
 
   public void undoCancel(long restaurantId, long ticketId) {
