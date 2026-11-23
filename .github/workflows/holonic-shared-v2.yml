@@ -80,7 +80,6 @@ jobs:
           api-key: ${{ secrets.HOLONIC_API_KEY }}
           platform-url: "https://49s1mkl7jg.execute-api.us-east-1.amazonaws.com"
           project: "ftgo"
-          description-gateway-port: '18764'
           coding-standards-port: '18765'
           evidence-bundle: "2a20dfeb230bbcde2ccaa3fab339ed98f958910eac4c89c9e587606f49e63487"
           spec-revision: "823a81980b654e638fbae5f619b2304a"
