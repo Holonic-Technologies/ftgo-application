@@ -1,4 +1,5 @@
 name: Holonic shared governance check
+run-name: Holonic analysis · PR #${{ github.event.pull_request.number || inputs.pull_request }}
 
 # Generated from the gov/cicd FTGO pilot template. The runner package is pinned by SHA-256.
 on:
@@ -6,13 +7,20 @@ on:
     branches: ["master"]
     types: [opened, synchronize, reopened, edited]
 
+  workflow_dispatch:
+    inputs:
+      pull_request:
+        description: Open pull request number targeting master
+        required: true
+        type: number
+
 permissions:
   contents: read
   pull-requests: read
 
 jobs:
   shared-check:
-    if: github.repository == 'Holonic-Technologies/ftgo-application'
+    if: github.repository == 'Holonic-Technologies/ftgo-application' && github.ref == 'refs/heads/master'
     runs-on: [self-hosted, holonic-shared-v2]
     timeout-minutes: 50
     outputs:
@@ -21,14 +29,35 @@ jobs:
       comment-summary: ${{ steps.review.outputs.comment-summary }}
       artifact-id: ${{ steps.analysis_artifact.outputs.artifact-id }}
       attempt: ${{ steps.attempt.outputs.number }}
+      pr: ${{ steps.refs.outputs.pr }}
+      base: ${{ steps.refs.outputs.base }}
+      head: ${{ steps.refs.outputs.head }}
     steps:
       - id: attempt
         shell: bash
         run: printf 'number=%s\n' "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+      - name: Resolve PR revisions
+        id: refs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number || inputs.pull_request }}
+          EVENT_HEAD: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$PR" =~ ^[1-9][0-9]{0,9}$ ]] || exit 2
+          IFS=$'	' read -r state branch head base < <(
+            gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" --jq '[.state,.base.ref,.head.sha,.base.sha] | @tsv')
+          [[ "$state" == open && "$branch" == master && "$head" =~ ^[a-f0-9]{40}$ && "$base" =~ ^[a-f0-9]{40}$ ]] || exit 2
+          if [[ "$GITHUB_EVENT_NAME" == pull_request_target ]]; then
+            [[ "$head" == "$EVENT_HEAD" && "$base" == "$EVENT_BASE" ]] || exit 2
+          fi
+          printf 'pr=%s\nbranch=%s\nhead=%s\nbase=%s\n' "$PR" "$branch" "$head" "$base" >> "$GITHUB_OUTPUT"
       - name: Load the pinned gov/cicd release
         shell: bash
         env:
-          CICD_RELEASE_SHA256: "2cea7513b0981bdbf79dd07f97c77b3777d12ebbd317e5a8fa6d32bd50eb2568"
+          CICD_RELEASE_SHA256: "b27d8e199345a166f2eed18247acf463b89ae7aa3782495ed9bf8c52e57ba73d"
         run: |
           set -euo pipefail
           archive="/opt/holonic-cicd/releases/${CICD_RELEASE_SHA256}/github-shared-v2-action.tar"
@@ -42,6 +71,10 @@ jobs:
       - id: review
         uses: ./.holonic-cicd
         with:
+          pr-number: ${{ steps.refs.outputs.pr }}
+          pr-head: ${{ steps.refs.outputs.head }}
+          pr-base: ${{ steps.refs.outputs.base }}
+          pr-base-ref: ${{ steps.refs.outputs.branch }}
           defer-verdict: 'true'
           browser-report: 'true'
           api-key: ${{ secrets.HOLONIC_API_KEY }}
@@ -82,7 +115,7 @@ jobs:
     permissions:
       pull-requests: write
     concurrency:
-      group: holonic-analysis-comment-${{ github.repository_id }}-${{ github.event.pull_request.number }}
+      group: holonic-analysis-comment-${{ github.repository_id }}-${{ needs.shared-check.outputs.pr }}
       queue: max
     steps:
       - name: Post or update the PR analysis link
@@ -90,9 +123,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
-          PR: ${{ github.event.pull_request.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR: ${{ needs.shared-check.outputs.pr }}
+          HEAD_SHA: ${{ needs.shared-check.outputs.head }}
+          BASE_SHA: ${{ needs.shared-check.outputs.base }}
           CHECK_ATTEMPT: ${{ needs.shared-check.outputs.attempt }}
           LATEST_PATH: ${{ needs.shared-check.outputs.latest-path }}
           COMMENT_SUMMARY: ${{ needs.shared-check.outputs.comment-summary }}
@@ -131,7 +164,7 @@ jobs:
           fi
 
   publish-head:
-    if: ${{ always() && !cancelled() && github.repository == 'Holonic-Technologies/ftgo-application' }}
+    if: ${{ always() && !cancelled() && github.repository == 'Holonic-Technologies/ftgo-application' && needs.shared-check.outputs.pr != '' }}
     needs: shared-check
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -139,7 +172,7 @@ jobs:
       pull-requests: read
       statuses: write
     concurrency:
-      group: holonic-status-${{ github.repository_id }}-${{ github.event.pull_request.number }}
+      group: holonic-status-${{ github.repository_id }}-${{ needs.shared-check.outputs.pr }}
       queue: max
     steps:
       - name: Attach report to the reviewed head
@@ -147,9 +180,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
-          PR: ${{ github.event.pull_request.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR: ${{ needs.shared-check.outputs.pr }}
+          HEAD_SHA: ${{ needs.shared-check.outputs.head }}
+          BASE_SHA: ${{ needs.shared-check.outputs.base }}
           VERDICT: ${{ needs.shared-check.outputs.verdict }}
           ARTIFACT_ID: ${{ needs.shared-check.outputs.artifact-id }}
           CHECK_ATTEMPT: ${{ needs.shared-check.outputs.attempt }}
