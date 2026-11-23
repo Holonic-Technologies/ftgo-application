@@ -1,14 +1,20 @@
 # Testing guide: governed-behavior review
 
+Open FTGO pull requests against `master`. The Holonic check posts its findings with analysis links in the pull request conversation. The approved
+[FTGO specifications](https://49s1mkl7jg.execute-api.us-east-1.amazonaws.com/reports/ftgo/specifications)
+are available in the Holonic Web Portal.
+
 This guide helps you, or an automated tester working for you, try the review on your own changes and judge how well it
 supports a reviewer's decision.
 
 ## What the review does
 
-The review learns the business workflows in your services from the code itself, and records the rules your team has
-accepted for each one. When a pull request arrives, it compares the behavior of every changed method against that
-baseline and shows the reviewer the few differences that matter. Each difference is tied to the workflow step it
-reaches and the accepted rule it puts at risk, and its intent is judged against the PR description.
+This pilot uses FTGO’s existing baseline of approved workflows and rules. Automatic workflow discovery from your
+source code and recording the rules your team accepts are unavailable in this pilot.
+
+When a pull request arrives, the review compares the behavior of every changed method against that baseline and
+shows the reviewer the few differences that matter. Each difference is tied to the workflow step it reaches and
+the accepted rule it puts at risk, and its intent is judged against the PR description.
 
 ## Why it works
 
@@ -23,24 +29,6 @@ reaches and the accepted rule it puts at risk, and its intent is judged against 
   is surfaced for a closer look.
 - **Consistent answers.** The same change gets the same result every time it runs.
 - **Advisory.** The review informs the reviewer and never blocks a merge.
-
-## Reading a review
-
-Each review page has:
-
-1. **The verdict** for the pull request as a whole.
-2. **One item per changed behavior**, each with:
-   - the accepted rule at risk, in plain words
-   - before and after: what the code did, and what it does now
-   - a label:
-     - **intended**: the PR description explains this change
-     - **unexpected**: the change works against the description or the accepted rule
-     - **uncertain**: the description doesn't say, so a person should decide
-3. **The workflow map**, which shows where in your workflows the change lands.
-4. **What this run covered**: the revisions compared, the files and methods analyzed, and anything set aside for
-   manual review.
-
-For each item, the reviewer marks **Expected** or **Investigate**.
 
 ## Designing test changes
 

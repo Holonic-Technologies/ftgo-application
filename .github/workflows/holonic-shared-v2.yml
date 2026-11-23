@@ -1,0 +1,186 @@
+name: Holonic shared governance check
+
+# Generated from the gov/cicd FTGO pilot template. The runner package is pinned by SHA-256.
+on:
+  pull_request_target:
+    branches: ["master"]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  shared-check:
+    if: github.repository == 'Holonic-Technologies/ftgo-application'
+    runs-on: [self-hosted, holonic-shared-v2]
+    timeout-minutes: 50
+    outputs:
+      verdict: ${{ steps.review.outputs.verdict }}
+      latest-path: ${{ steps.review.outputs.latest-path }}
+      comment-summary: ${{ steps.review.outputs.comment-summary }}
+      artifact-id: ${{ steps.analysis_artifact.outputs.artifact-id }}
+      attempt: ${{ steps.attempt.outputs.number }}
+    steps:
+      - id: attempt
+        shell: bash
+        run: printf 'number=%s\n' "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+      - name: Load the pinned gov/cicd release
+        shell: bash
+        env:
+          CICD_RELEASE_SHA256: "2cea7513b0981bdbf79dd07f97c77b3777d12ebbd317e5a8fa6d32bd50eb2568"
+        run: |
+          set -euo pipefail
+          archive="/opt/holonic-cicd/releases/${CICD_RELEASE_SHA256}/github-shared-v2-action.tar"
+          printf '%s  %s\n' "$CICD_RELEASE_SHA256" "$archive" | sha256sum --check --status
+          stage=$(mktemp -d "$GITHUB_WORKSPACE/.holonic-cicd.XXXXXXXX")
+          trap 'rm -rf -- "$stage"' EXIT
+          tar -xf "$archive" -C "$stage"
+          test -f "$stage/action.yml"
+          rm -rf -- "$GITHUB_WORKSPACE/.holonic-cicd"
+          mv -- "$stage" "$GITHUB_WORKSPACE/.holonic-cicd"
+      - id: review
+        uses: ./.holonic-cicd
+        with:
+          defer-verdict: 'true'
+          browser-report: 'true'
+          api-key: ${{ secrets.HOLONIC_API_KEY }}
+          platform-url: "https://49s1mkl7jg.execute-api.us-east-1.amazonaws.com"
+          project: "ftgo"
+          description-gateway-port: '18764'
+          coding-standards-port: '18765'
+          evidence-bundle: "2a20dfeb230bbcde2ccaa3fab339ed98f958910eac4c89c9e587606f49e63487"
+          spec-revision: "823a81980b654e638fbae5f619b2304a"
+          expected-laws-sha256: "6c45e0ff2ab97f81c641a4ed26a48691fe15f8fe5eca7d544b6b37f9f737eb02"
+      - name: Save retained check result
+        id: analysis_artifact
+        if: ${{ success() && steps.review.outputs.verdict != '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: holonic-shared-check-${{ github.event.pull_request.number }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/holonic-shared-v2.json
+            ${{ runner.temp }}/holonic-shared-v2.html
+          if-no-files-found: error
+          retention-days: 30
+      - name: Summarize findings
+        if: ${{ steps.review.outputs.comment-summary != '' }}
+        shell: bash
+        env:
+          COMMENT_SUMMARY: ${{ steps.review.outputs.comment-summary }}
+        run: printf '%s' "$COMMENT_SUMMARY" | base64 --decode >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce the retained verdict
+        if: ${{ always() && steps.review.outputs.verdict != 'satisfied' }}
+        run: exit 1
+
+  comment-analysis:
+    if: ${{ always() && !cancelled() && github.repository == 'Holonic-Technologies/ftgo-application' && needs.shared-check.outputs.latest-path != '' }}
+    needs: shared-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    concurrency:
+      group: holonic-analysis-comment-${{ github.repository_id }}-${{ github.event.pull_request.number }}
+      queue: max
+    steps:
+      - name: Post or update the PR analysis link
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          CHECK_ATTEMPT: ${{ needs.shared-check.outputs.attempt }}
+          LATEST_PATH: ${{ needs.shared-check.outputs.latest-path }}
+          COMMENT_SUMMARY: ${{ needs.shared-check.outputs.comment-summary }}
+          PROJECT_ID: "ftgo"
+        run: |
+          set -euo pipefail
+          [[ "$CHECK_ATTEMPT" == "$GITHUB_RUN_ATTEMPT" ]] || exit 0
+          [[ "$LATEST_PATH" == "/reports/$PROJECT_ID/pr/$PR" ]] || exit 1
+
+          comments="repos/$REPOSITORY/issues/$PR/comments"
+          # Match the workflow marker only on GitHub Actions bot comments.
+          previous=$(gh api --paginate "$comments?per_page=100" --jq '
+            .[] | select(.user.login == "github-actions[bot]") |
+            [.id, (.body | split("\n")[0])] | @tsv')
+          comment_id=
+          while IFS=$'\t' read -r id marker; do
+            [[ "$id" =~ ^[1-9][0-9]*$ && "$marker" =~ ^'<!-- holonic-pr-analysis '([0-9]+)\.([0-9]+)' -->'$ ]] || continue
+            # A rerun of an older workflow must leave the newer report in place.
+            if (( BASH_REMATCH[1] > GITHUB_RUN_NUMBER ||
+                  (BASH_REMATCH[1] == GITHUB_RUN_NUMBER && BASH_REMATCH[2] > GITHUB_RUN_ATTEMPT) )); then
+              exit 0
+            fi
+            comment_id=$id
+          done <<< "$previous"
+
+          current=$(gh api "repos/$REPOSITORY/pulls/$PR" --jq '[.state,.head.sha,.base.sha] | @tsv')
+          [[ "$current" == "$(printf 'open\t%s\t%s' "$HEAD_SHA" "$BASE_SHA")" ]] || exit 0
+          test -n "$COMMENT_SUMMARY"
+          summary=$(printf '%s' "$COMMENT_SUMMARY" | base64 --decode)
+          body=$(printf '<!-- holonic-pr-analysis %s.%s -->\n%s' \
+            "$GITHUB_RUN_NUMBER" "$GITHUB_RUN_ATTEMPT" "$summary")
+          if [ -n "$comment_id" ]; then
+            gh api --method PATCH "repos/$REPOSITORY/issues/comments/$comment_id" -f body="$body" --silent
+          else
+            gh api --method POST "$comments" -f body="$body" --silent
+          fi
+
+  publish-head:
+    if: ${{ always() && !cancelled() && github.repository == 'Holonic-Technologies/ftgo-application' }}
+    needs: shared-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+      statuses: write
+    concurrency:
+      group: holonic-status-${{ github.repository_id }}-${{ github.event.pull_request.number }}
+      queue: max
+    steps:
+      - name: Attach report to the reviewed head
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          VERDICT: ${{ needs.shared-check.outputs.verdict }}
+          ARTIFACT_ID: ${{ needs.shared-check.outputs.artifact-id }}
+          CHECK_ATTEMPT: ${{ needs.shared-check.outputs.attempt }}
+          CHECK_JOB: ${{ needs.shared-check.result }}
+        run: |
+          set -euo pipefail
+          # Rerunning only the publisher cannot certify a previous attempt's analysis.
+          [[ "$CHECK_ATTEMPT" == "$GITHUB_RUN_ATTEMPT" ]] || exit 1
+          context="Holonic / PR $PR"
+          # Only this serialized publisher writes the context. A rerun of an old
+          # workflow must not replace a result from a newer workflow run.
+          statuses=$(gh api --paginate "repos/$REPOSITORY/commits/$HEAD_SHA/statuses?per_page=100" \
+            --jq '.[] | [.context, .description] | @tsv')
+          while IFS=$'\t' read -r name description; do
+            [[ "$name" == "$context" ]] || continue
+            [[ "$description" =~ ^Run[[:space:]]([0-9]+)\.([0-9]+)[[:space:]] ]] || exit 2
+            if (( BASH_REMATCH[1] > GITHUB_RUN_NUMBER || (BASH_REMATCH[1] == GITHUB_RUN_NUMBER && BASH_REMATCH[2] > GITHUB_RUN_ATTEMPT) )); then
+              exit 0
+            fi
+          done <<< "$statuses"
+          current=$(gh api "repos/$REPOSITORY/pulls/$PR" --jq '[.state,.head.sha,.base.sha] | @tsv')
+          [[ "$current" == "$(printf 'open\t%s\t%s' "$HEAD_SHA" "$BASE_SHA")" ]] || exit 0
+          url="$GITHUB_SERVER_URL/$REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          state=error
+          label="analysis unavailable"
+          if [[ "$ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]; then
+            case "$VERDICT:$CHECK_JOB" in
+              satisfied:success) state=success; label=satisfied ;;
+              violated:failure) state=failure; label=violated ;;
+              inconclusive:failure) label=inconclusive ;;
+            esac
+          fi
+          gh api --method POST "repos/$REPOSITORY/statuses/$HEAD_SHA" -f state="$state" \
+            -f context="$context" -f target_url="$url" -f description="Run $GITHUB_RUN_NUMBER.$GITHUB_RUN_ATTEMPT · $label" --silent
