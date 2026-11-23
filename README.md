@@ -7,6 +7,32 @@ are available in the Holonic Web Portal.
 This guide helps you, or an automated tester working for you, try the review on your own changes and judge how well it
 supports a reviewer's decision.
 
+## Open a pull request from a fork
+
+1. On this repository’s GitHub page, click **Fork**, choose your account as the owner, and click **Create fork**.
+2. Clone your fork and create a branch. Replace `YOUR_GITHUB_USERNAME` with your GitHub username.
+
+   ```sh
+   git clone https://github.com/YOUR_GITHUB_USERNAME/ftgo-application.git
+   cd ftgo-application
+   git switch -c my-change
+   ```
+
+3. Make your changes, then commit and push them to your fork.
+
+   ```sh
+   git add path/to/changed-file
+   git commit -m "Describe your change"
+   git push -u origin my-change
+   ```
+
+4. On GitHub, open a new pull request and choose **compare across forks**. Set the base repository to
+   `Holonic-Technologies/ftgo-application` and the base branch to `master`. Select your fork and `my-change`
+   as the head. Add a title and a description of what changed and why, then click **Create pull request**.
+
+Look for **Holonic / PR** in the check results and for links to findings in the PR conversation. If GitHub asks for
+approval to run the workflow, a maintainer can approve it from the PR.
+
 ## What the review does
 
 This pilot uses FTGO’s existing baseline of approved workflows and rules. Automatic workflow discovery from your
