@@ -1,5 +1,5 @@
 name: Holonic shared governance check
-run-name: Holonic analysis · PR #${{ github.event.pull_request.number || inputs.pull_request }}
+run-name: "Holonic analysis · PR #${{ github.event.pull_request.number || inputs.pull_request }}"
 
 # Generated from the gov/cicd FTGO pilot template. The runner package is pinned by SHA-256.
 on:
